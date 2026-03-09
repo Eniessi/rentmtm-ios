@@ -17,6 +17,7 @@ import com.rentmtm.ui.forgotpassword.ForgotPasswordScreen
 import com.rentmtm.ui.home.HomeScreen
 import com.rentmtm.ui.login.LoginScreen
 import com.rentmtm.ui.newpassword.NewPasswordScreen
+import com.rentmtm.ui.profile.ProfileFlow
 import com.rentmtm.ui.profile.ProfileSelectionScreen
 import com.rentmtm.ui.signup.SignUpScreen
 
@@ -72,10 +73,16 @@ fun App() {
                 }
 
                 composable(route = Routes.ProfileSelection.name) {
-                    ProfileSelectionScreen(
-                        onNextClicked = { perfilEscolhido ->
-                            println("Perfil selecionado: $perfilEscolhido")
-                            navController.navigate(Routes.Home.name)
+                    ProfileFlow(
+                        onNavigateToNextStep = { perfilEscolhido ->
+                            println("Fluxo de Perfil concluído com: $perfilEscolhido")
+
+                            // TODO: Implementar a navegação para a RegisterScreen.
+
+                            navController.navigate(Routes.Home.name) {
+                                popUpTo(0) { inclusive = true }
+                                launchSingleTop = true
+                            }
                         }
                     )
                 }

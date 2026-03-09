@@ -2,10 +2,14 @@ package com.rentmtm.ui.profile
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image // Importação para imagens PNG!
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.filled.AddBox
+import androidx.compose.material.icons.filled.AddTask
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,7 +37,7 @@ val profileOptions = listOf(
 )
 
 @Composable
-fun ProfileSelectionScreen(onNextClicked: (String) -> Unit) {
+fun ProfileSelectionScreen(onNextClicked: (String) -> Unit, onNavigateToInfo: (String) -> Unit) {
 
     var selectedProfile by remember { mutableStateOf<ProfileOption?>(profileOptions[0]) }
 
@@ -73,10 +77,14 @@ fun ProfileSelectionScreen(onNextClicked: (String) -> Unit) {
                 ProfileCard(
                     profile = profile,
                     isSelected = selectedProfile == profile,
-                    onClick = { selectedProfile = profile }
+                    onSelect = { selectedProfile = profile },
+                    onInfoClick = { onNavigateToInfo(profile.title) }
                 )
             }
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
 
         Button(
             onClick = { selectedProfile?.let { onNextClicked(it.title) } },
@@ -88,52 +96,76 @@ fun ProfileSelectionScreen(onNextClicked: (String) -> Unit) {
             Text("Next", fontSize = 16.sp)
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(12.dp))
     }
 }
 
 @Composable
-fun ProfileCard(profile: ProfileOption, isSelected: Boolean, onClick: () -> Unit) {
-
+fun ProfileCard(
+    profile: ProfileOption,
+    isSelected: Boolean,
+    onSelect: () -> Unit,
+    onInfoClick: () -> Unit
+) {
     val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
-    val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+    val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surface
 
     OutlinedCard(
-        onClick = onClick,
-        modifier = Modifier.aspectRatio(1f),
+        modifier = Modifier.aspectRatio(0.8f), // Um pouco mais alto para o botão
         border = BorderStroke(if (isSelected) 2.dp else 1.dp, borderColor),
-        colors = CardDefaults.outlinedCardColors(containerColor = containerColor)
+        colors = CardDefaults.outlinedCardColors(containerColor = containerColor),
+        shape = MaterialTheme.shapes.medium
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Image(
-                painter = painterResource(profile.imageRes),
-                contentDescription = profile.title,
-                modifier = Modifier.size(64.dp)
-            )
+        Column(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .clickable { onSelect() }
+                    .padding(12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Image(
+                        painter = painterResource(profile.imageRes),
+                        contentDescription = profile.title,
+                        modifier = Modifier.size(54.dp)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = profile.title,
+                        textAlign = TextAlign.Center,
+                        fontSize = 14.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = profile.title,
-                textAlign = TextAlign.Center,
-                fontSize = 14.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-            )
+            Surface(
+                onClick = onInfoClick,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.fillMaxWidth().height(40.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "INFO",
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.2.sp
+                    )
+                }
+            }
         }
     }
 }
-
 @Preview(showBackground = true)
 @Composable
 fun ProfileSelectionScreenPreview() {
     MaterialTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
-            ProfileSelectionScreen(onNextClicked = {})
+            ProfileSelectionScreen(onNextClicked = {}, onNavigateToInfo = {})
         }
     }
 }

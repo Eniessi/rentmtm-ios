@@ -1,0 +1,16 @@
+CREATE TABLE MarketplaceProfileEntity (
+    idMarketplaceProfile INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    description TEXT,
+    profileDetails TEXT
+);
+
+insertMarketplaceProfile:
+INSERT INTO MarketplaceProfileEntity(description, profileDetails)
+VALUES (?, ?);
+
+getAllMarketplaceProfiles:
+SELECT * FROM MarketplaceProfileEntity;
+
+getMarketplaceProfileById:
+SELECT * FROM MarketplaceProfileEntity
+WHERE idMarketplaceProfile = ?;

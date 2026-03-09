@@ -1,0 +1,21 @@
+CREATE TABLE CertificationEntity (
+    idCertification INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    issuingOrganization TEXT,
+    expirationDate TEXT
+);
+
+insertCertification:
+INSERT INTO CertificationEntity(name, issuingOrganization, expirationDate)
+VALUES (?, ?, ?);
+
+getAllCertifications:
+SELECT * FROM CertificationEntity;
+
+getCertificationById:
+SELECT * FROM CertificationEntity
+WHERE idCertification = ?;
+
+deleteCertificationById:
+DELETE FROM CertificationEntity
+WHERE idCertification = ?;

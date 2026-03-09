@@ -1,0 +1,24 @@
+CREATE TABLE EmploymentEntity (
+    idEmployment INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    employer TEXT,
+    position TEXT,
+    startDate TEXT,
+    endDate TEXT,
+    reasonForLeaving TEXT,
+    responsibilities TEXT
+);
+
+insertEmployment:
+INSERT INTO EmploymentEntity(employer, position, startDate, endDate, reasonForLeaving, responsibilities)
+VALUES (?, ?, ?, ?, ?, ?);
+
+getAllEmployments:
+SELECT * FROM EmploymentEntity;
+
+getEmploymentById:
+SELECT * FROM EmploymentEntity
+WHERE idEmployment = ?;
+
+deleteEmploymentById:
+DELETE FROM EmploymentEntity
+WHERE idEmployment = ?;

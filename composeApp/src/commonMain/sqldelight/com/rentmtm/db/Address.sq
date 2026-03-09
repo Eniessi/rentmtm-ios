@@ -1,0 +1,28 @@
+CREATE TABLE AddressEntity (
+    idAddress INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    street TEXT,
+    city TEXT,
+    state TEXT,
+    country TEXT,
+    zipCode TEXT
+);
+
+insertAddress:
+INSERT INTO AddressEntity(street, city, state, country, zipCode)
+VALUES (?, ?, ?, ?, ?);
+
+getAllAddresses:
+SELECT * FROM AddressEntity;
+
+getAddressById:
+SELECT * FROM AddressEntity
+WHERE idAddress = ?;
+
+updateAddress:
+UPDATE AddressEntity
+SET street = ?, city = ?, state = ?, country = ?, zipCode = ?
+WHERE idAddress = ?;
+
+deleteAddressById:
+DELETE FROM AddressEntity
+WHERE idAddress = ?;

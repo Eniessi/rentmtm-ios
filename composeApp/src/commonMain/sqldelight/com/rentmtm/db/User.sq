@@ -1,0 +1,50 @@
+import kotlin.Boolean;
+import kotlin.Int;
+
+CREATE TABLE UserEntity (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    userTypeId INTEGER,
+    rentProfileId INTEGER,
+    marketplaceProfileId INTEGER,
+    addressId INTEGER AS Int NOT NULL DEFAULT 0,
+    profile TEXT,
+    firstName TEXT,
+    lastName TEXT,
+    email TEXT,
+    phoneNumber TEXT,
+    password TEXT,
+    accessKey TEXT,
+    city TEXT,
+    state TEXT,
+    contractType TEXT,
+    fullNameHolder TEXT,
+    typeDocument TEXT,
+    documentNumber TEXT,
+    documentDetails TEXT,
+    dateBirth TEXT,
+    expirationDate TEXT,
+    issueDate TEXT,
+    loginDateTime TEXT,
+    isSubscriber INTEGER AS Boolean NOT NULL DEFAULT 0,
+    isConnected INTEGER AS Boolean NOT NULL DEFAULT 0,
+    financialStatus INTEGER AS Boolean NOT NULL DEFAULT 0,
+    gender TEXT,
+    typeDocumentEnum TEXT,
+    validationMethod TEXT
+);
+
+insertUser:
+INSERT INTO UserEntity DEFAULT VALUES;
+
+updateUser:
+UPDATE UserEntity
+SET firstName = ?, lastName = ?, email = ?, phoneNumber = ?, password = ?,
+    city = ?, state = ?, isSubscriber = ?, isConnected = ?, financialStatus = ?,
+    gender = ?, typeDocumentEnum = ?, validationMethod = ?
+WHERE id = ?;
+
+getUserById:
+SELECT * FROM UserEntity WHERE id = ?;
+
+deleteUser:
+DELETE FROM UserEntity WHERE id = ?;

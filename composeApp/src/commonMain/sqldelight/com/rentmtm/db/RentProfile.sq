@@ -1,0 +1,16 @@
+CREATE TABLE RentProfileEntity (
+    idRentProfile INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    description TEXT,
+    profileDetails TEXT
+);
+
+insertRentProfile:
+INSERT INTO RentProfileEntity(description, profileDetails)
+VALUES (?, ?);
+
+getAllRentProfiles:
+SELECT * FROM RentProfileEntity;
+
+getRentProfileById:
+SELECT * FROM RentProfileEntity
+WHERE idRentProfile = ?;

@@ -64,7 +64,9 @@ fun HomeScreen(
     isLoggedIn: Boolean,
     currentRoute: String,
     onNavigateToLogin: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    // 1. NOVO PARÂMETRO: Função para abrir a webview (recebe URL e Título)
+    onNavigateToWeb: (String, String) -> Unit
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -77,6 +79,7 @@ fun HomeScreen(
             ModalDrawerSheet(
                 windowInsets = WindowInsets(0, 0, 0, 0)
             ) {
+                // CABEÇALHO DA DRAWER
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -112,6 +115,7 @@ fun HomeScreen(
 
                 HorizontalDivider(modifier = Modifier.padding(bottom = 8.dp))
 
+                // OPÇÃO: LOGIN
                 if (!isLoggedIn) {
                     NavigationDrawerItem(
                         label = { Text("Login", fontFamily = FontFamily.Serif, fontSize = 16.sp) },
@@ -136,7 +140,31 @@ fun HomeScreen(
                     )
                 }
 
-                val menuOptions = listOf("My Account", "RentMTM", "My MarketPlace", "Lilo Virtual Assistent", "Work With Us","Prof. Allocated Area", "Talk to us")
+                // 2. NOVAS OPÇÕES: ABRIR WEBVIEWS
+                NavigationDrawerItem(
+                    label = { Text("RentMTM", fontFamily = FontFamily.Default, fontSize = 16.sp, color = MaterialTheme.colorScheme.tertiary) },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        // IMPORTANTE: Troque pelo link real da sua aplicação web!
+                        onNavigateToWeb("http://www.rentmtm.com/", "RentMTM")
+                    },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+
+                NavigationDrawerItem(
+                    label = { Text("My MarketPlace", fontFamily = FontFamily.Default, fontSize = 16.sp, color = MaterialTheme.colorScheme.tertiary) },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        // IMPORTANTE: Troque pelo link real do seu marketplace!
+                        onNavigateToWeb("http://www.rentmtm.com/tourRentMTM", "My MarketPlace")
+                    },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+
+                // OPÇÕES GENÉRICAS RESTANTES
+                val menuOptions = listOf("My Account", "Lilo Virtual Assistent", "Work With Us", "Prof. Allocated Area", "Talk to us")
 
                 menuOptions.forEach { option ->
                     NavigationDrawerItem(
@@ -144,12 +172,9 @@ fun HomeScreen(
                         selected = false,
                         onClick = {
                             scope.launch { drawerState.close() }
-
-                            // 2. A lógica que esconde o botão se a opção for a Lilo
                             if (option == "Lilo Virtual Assistent") {
                                 showFab = false
                             } else {
-                                // Se clicar em outra opção qualquer, o botão continua/volta a aparecer
                                 showFab = true
                             }
                         },
@@ -157,7 +182,6 @@ fun HomeScreen(
                     )
                 }
 
-                // Empurra o painel lá para o fundo
                 Spacer(modifier = Modifier.weight(1f))
 
                 if (isLoggedIn) {
@@ -273,7 +297,8 @@ fun HomeScreenPreview() {
             isLoggedIn = true,
             currentRoute = "Home",
             onNavigateToLogin = {},
-            onLogout = {}
+            onLogout = {},
+            onNavigateToWeb = { _, _ -> } // Preview falso
         )
     }
 }

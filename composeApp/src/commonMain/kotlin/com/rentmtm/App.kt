@@ -24,6 +24,9 @@ import com.rentmtm.ui.newpassword.NewPasswordScreen
 import com.rentmtm.ui.profile.ProfileFlow
 import com.rentmtm.viewmodel.*
 import com.rentmtm.ui.signup.SignUpScreen
+import com.rentmtm.ui.webview.WebBrowserScreen
+import io.ktor.http.decodeURLPart
+import io.ktor.http.encodeURLParameter
 
 // Definição das Cores
 val AzulP = Color(0xFF004AAD)
@@ -45,6 +48,7 @@ enum class Routes {
     RegisterUser,
     ForgotPassword,
     NewPassword,
+    WebBrowser,
     Home
 }
 
@@ -156,9 +160,32 @@ fun App() {
                         isLoggedIn = true,
                         currentRoute = Routes.Home.name,
                         onNavigateToLogin = { navController.navigate(Routes.Login.name) },
-                        onLogout = {
-                            navController.navigate(Routes.Login.name) { popUpTo(0) }
+                        onLogout = { navController.navigate(Routes.Login.name) { popUpTo(0) } },
+                        // A MÁGICA ACONTECE AQUI:
+                        onNavigateToWeb = { url, title ->
+                            // Usamos o navArgument para mandar os textos junto com a rota
+                            val encodedUrl = url.encodeURLParameter()
+                            navController.navigate("${Routes.WebBrowser.name}/$encodedUrl/$title")
                         }
+                    )
+                }
+
+                composable(
+                    route = "${Routes.WebBrowser.name}/{url}/{title}",
+                    arguments = listOf(
+                        navArgument("url") { type = NavType.StringType },
+                        navArgument("title") { type = NavType.StringType }
+                    )
+                ) { backStackEntry ->
+                    val urlPassed = backStackEntry.arguments?.getString("url") ?: ""
+                    val titlePassed = backStackEntry.arguments?.getString("title") ?: "Web Page"
+
+                    val decodedUrl = urlPassed.decodeURLPart()
+
+                    WebBrowserScreen(
+                        url = decodedUrl,
+                        pageTitle = titlePassed,
+                        onBack = { navController.popBackStack() }
                     )
                 }
 

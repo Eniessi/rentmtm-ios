@@ -50,6 +50,7 @@ kotlin {
             implementation(libs.navigation.compose)
             implementation(libs.sqldelight.runtime)
             implementation(libs.sqldelight.coroutines.extensions)
+            implementation("io.github.kevinnzou:compose-webview-multiplatform:1.9.40") // ou a versão mais recente
             implementation("app.cash.sqldelight:primitive-adapters:2.0.1")
         }
         commonTest.dependencies {

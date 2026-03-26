@@ -1,21 +1,21 @@
-CREATE TABLE EmergencyContactEntity (
-    idEmergencyContact INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+CREATE TABLE EmergencyContact (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     name TEXT,
     relationship TEXT,
     phoneNumber TEXT
 );
 
 insertEmergencyContact:
-INSERT INTO EmergencyContactEntity(name, relationship, phoneNumber)
+INSERT INTO EmergencyContact(name, relationship, phoneNumber)
 VALUES (?, ?, ?);
 
 getAllEmergencyContacts:
-SELECT * FROM EmergencyContactEntity;
+SELECT * FROM EmergencyContact;
 
 getEmergencyContactById:
-SELECT * FROM EmergencyContactEntity
-WHERE idEmergencyContact = ?;
+SELECT * FROM EmergencyContact
+WHERE id = ?;
 
 deleteEmergencyContactById:
-DELETE FROM EmergencyContactEntity
-WHERE idEmergencyContact = ?;
+DELETE FROM EmergencyContact
+WHERE id = ?;

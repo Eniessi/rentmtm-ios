@@ -9,5 +9,7 @@ data class Address(
     var city: String? = null,
     var state: String? = null,
     var country: String? = null,
-    var zipCode: String? = null
+    var zipCode: String? = null,
+    var number: Int? = null,
+    var apartment: String? = null
 )

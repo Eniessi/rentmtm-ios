@@ -1,20 +1,20 @@
-CREATE TABLE LanguageEntity (
-    idLanguage INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+CREATE TABLE Language (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     name TEXT,
     fluencyLevel TEXT
 );
 
 insertLanguage:
-INSERT INTO LanguageEntity(name, fluencyLevel)
+INSERT INTO Language(name, fluencyLevel)
 VALUES (?, ?);
 
 getAllLanguages:
-SELECT * FROM LanguageEntity;
+SELECT * FROM Language;
 
 getLanguageById:
-SELECT * FROM LanguageEntity
-WHERE idLanguage = ?;
+SELECT * FROM Language
+WHERE id = ?;
 
 deleteLanguageById:
-DELETE FROM LanguageEntity
-WHERE idLanguage = ?;
+DELETE FROM Language
+WHERE id = ?;

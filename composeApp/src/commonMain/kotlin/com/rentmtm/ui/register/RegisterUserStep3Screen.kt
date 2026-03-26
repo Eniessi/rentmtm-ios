@@ -29,7 +29,7 @@ import rentmtm.composeapp.generated.resources.ic_step_03
 
 @Composable
 fun RegisterUserStep3Screen(
-    viewModel: RegisterViewModel, // ⬅️ Conexão com o Cérebro
+    viewModel: RegisterViewModel,
     profileTitle: String = "Tenant / Renter",
     onBack: () -> Unit,
     onNext: () -> Unit
@@ -118,34 +118,6 @@ fun RegisterUserStep3Screen(
             Spacer(modifier = Modifier.height(24.dp))
 
             // MAPA (VISUAL APENAS)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.LightGray.copy(alpha = 0.5f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn,
-                        contentDescription = "Map Pin",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(40.dp)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Interactive Map Integration",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Will be loaded via API",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 12.sp
-                    )
-                }
-            }
 
             Spacer(modifier = Modifier.height(16.dp))
         }

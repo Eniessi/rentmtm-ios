@@ -15,9 +15,9 @@ class MainActivity : ComponentActivity() {
         val driverFactory = DriverFactory(this)
         val database = createDatabase(driverFactory)
 
-        database.userQueries.insertUser()
+        val users = database.userQueries.getAllUsers().executeAsList()
 
-        println("Banco de dados inicializado com sucesso!")
+        println("TESTE DE BANCO: Foram encontrados ${users.size} usuários.")
 
         setContent {
             App()

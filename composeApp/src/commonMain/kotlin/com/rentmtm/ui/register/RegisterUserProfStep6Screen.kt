@@ -123,11 +123,56 @@ fun RegisterUserProfStep6Screen(
             Text("Certifications & Licenses (if applicable)", fontSize = 18.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
             Spacer(modifier = Modifier.height(16.dp))
 
-            MtmTextField("Name", viewModel.qualifications.certName, { viewModel.qualifications = viewModel.qualifications.copy(certName = it) }, "PMP, AWS Certified Developer")
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                MtmTextField("Issuing Organization", viewModel.qualifications.certOrg, { viewModel.qualifications = viewModel.qualifications.copy(certOrg = it) }, "PMI, Amazon", Modifier.weight(1f))
-                MtmDateField("Expiration Date", viewModel.qualifications.certDate, { viewModel.qualifications = viewModel.qualifications.copy(certDate = it) }, Modifier.weight(1f))
+            viewModel.qualifications.certifications.forEachIndexed { index, certification ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Certification ${index + 1}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+
+                    if (viewModel.qualifications.certifications.size > 1) {
+                        TextButton(onClick = { viewModel.removeCertification(index) }) {
+                            Text("Remove", color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                MtmTextField(
+                    label = "Name",
+                    value = certification.certName,
+                    onValueChange = { viewModel.updateCertification(index, certification.copy(certName = it)) },
+                    placeholder = "PMP, AWS Certified Developer"
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    MtmTextField(
+                        label = "Issuing Organization",
+                        value = certification.certOrg,
+                        onValueChange = { viewModel.updateCertification(index, certification.copy(certOrg = it)) },
+                        placeholder = "PMI, Amazon",
+                        modifier = Modifier.weight(1f)
+                    )
+                    MtmDateField(
+                        label = "Expiration Date",
+                        value = certification.certDate,
+                        onDateSelected = { viewModel.updateCertification(index, certification.copy(certDate = it)) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            OutlinedButton(
+                onClick = { viewModel.addCertification() },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Certification")
+                Spacer(Modifier.width(8.dp))
+                Text("Add Another Certification")
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -241,14 +286,68 @@ fun RegisterUserProfStep6Screen(
             Text("Professional References", fontSize = 18.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
             Spacer(modifier = Modifier.height(16.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                MtmTextField("Name", viewModel.qualifications.refName, { viewModel.qualifications = viewModel.qualifications.copy(refName = it) }, "John Doe", Modifier.weight(1f))
-                MtmTextField("Company", viewModel.qualifications.refCompany, { viewModel.qualifications = viewModel.qualifications.copy(refCompany = it) }, "ABC Corp", Modifier.weight(1f))
+            viewModel.qualifications.references.forEachIndexed { index, reference ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Reference ${index + 1}", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+
+                    if (viewModel.qualifications.references.size > 1) {
+                        TextButton(onClick = { viewModel.removeReference(index) }) {
+                            Text("Remove", color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    MtmTextField(
+                        label = "Name",
+                        value = reference.name,
+                        onValueChange = { viewModel.updateReference(index, reference.copy(name = it)) },
+                        placeholder = "John Doe",
+                        modifier = Modifier.weight(1f)
+                    )
+                    MtmTextField(
+                        label = "Company",
+                        value = reference.company,
+                        onValueChange = { viewModel.updateReference(index, reference.copy(company = it)) },
+                        placeholder = "ABC Corp",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    MtmTextField(
+                        label = "Relationship",
+                        value = reference.relationship,
+                        onValueChange = { viewModel.updateReference(index, reference.copy(relationship = it)) },
+                        placeholder = "Former Manager",
+                        modifier = Modifier.weight(1f)
+                    )
+                    MtmTextField(
+                        label = "Phone/Email",
+                        value = reference.contact,
+                        onValueChange = { viewModel.updateReference(index, reference.copy(contact = it)) },
+                        placeholder = "Contact info",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
             }
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                MtmTextField("Relationship", viewModel.qualifications.refRel, { viewModel.qualifications = viewModel.qualifications.copy(refRel = it) }, "Former Manager", Modifier.weight(1f))
-                MtmTextField("Phone/Email", viewModel.qualifications.refContact, { viewModel.qualifications = viewModel.qualifications.copy(refContact = it) }, "Contact info", Modifier.weight(1f))
+
+            OutlinedButton(
+                onClick = { viewModel.addReference() },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Reference")
+                Spacer(Modifier.width(8.dp))
+                Text("Add Another Reference")
             }
 
             Spacer(modifier = Modifier.height(16.dp))

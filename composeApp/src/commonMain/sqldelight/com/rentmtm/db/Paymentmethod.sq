@@ -1,0 +1,65 @@
+import com.rentmtm.model.enums.PaymentMethodType; -- Ajuste para o caminho do seu Enum (se existir)
+
+-- ==========================================
+-- TABELA
+-- ==========================================
+CREATE TABLE PaymentMethod (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    userId INTEGER NOT NULL,
+    methodType TEXT AS PaymentMethodType NOT NULL, -- Padrão Ouro: Enum Nativo
+    
+    cardHolder TEXT,
+    
+    -- 🚨 ATENÇÃO Em produção, substitua estas 3 linhas por 'cardToken' e 'lastFourDigits'
+    cardNumber TEXT, 
+    cvv TEXT,
+    expiryDate TEXT,
+    
+    paypalEmail TEXT,
+    FOREIGN KEY (userId) REFERENCES User(id) ON DELETE CASCADE
+);
+
+-- ==========================================
+-- QUERIES (CRUD de PaymentMethod)
+-- ==========================================
+
+-- 1. CREATE
+insertPaymentMethod:
+INSERT INTO PaymentMethod (
+    userId, 
+    methodType, 
+    cardHolder, 
+    cardNumber, 
+    cvv, 
+    expiryDate, 
+    paypalEmail
+)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+getLastInsertId:
+SELECT last_insert_rowid();
+
+-- 2. READ
+getPaymentMethodById:
+SELECT * FROM PaymentMethod WHERE id = ?;
+
+-- A Query mais importante desta tabela: Buscar os cartões de um usuário específico
+getPaymentMethodsByUserId:
+SELECT * FROM PaymentMethod WHERE userId = ?;
+
+-- 3. UPDATE
+-- Nota Arquitetural: Geralmente, não permitimos que o usuário "edite" o número de um cartão. 
+-- Se ele errou, ele deve apagar e cadastrar um novo. Por isso, a atualização foca apenas
+-- em dados mutáveis (como nome do titular ou e-mail do paypal).
+updatePaymentMethodDetails:
+UPDATE PaymentMethod
+SET cardHolder = ?, paypalEmail = ?
+WHERE id = ?;
+
+-- 4. DELETE
+deletePaymentMethodById:
+DELETE FROM PaymentMethod WHERE id = ?;
+
+-- Remove todos os métodos de um usuário (útil caso o ON DELETE CASCADE falhe ou para limpezas manuais)
+deleteAllMethodsFromUser:
+DELETE FROM PaymentMethod WHERE userId = ?;

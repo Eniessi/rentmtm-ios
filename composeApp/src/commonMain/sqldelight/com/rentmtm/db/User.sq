@@ -1,50 +1,66 @@
 import kotlin.Boolean;
-import kotlin.Int;
+import com.rentmtm.model.enums.Gender;
+import com.rentmtm.model.UserType;
 
-CREATE TABLE UserEntity (
+CREATE TABLE User (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    userTypeId INTEGER,
-    rentProfileId INTEGER,
-    marketplaceProfileId INTEGER,
-    addressId INTEGER AS Int NOT NULL DEFAULT 0,
-    profile TEXT,
+    userType TEXT AS UserType,
     firstName TEXT,
     lastName TEXT,
     email TEXT,
-    phoneNumber TEXT,
     password TEXT,
-    accessKey TEXT,
-    city TEXT,
-    state TEXT,
-    contractType TEXT,
+    phoneNumber TEXT,
+    dateBirth TEXT,
+    gender TEXT AS Gender,
+    nationality TEXT,
+    primaryLanguage TEXT,
     fullNameHolder TEXT,
-    typeDocument TEXT,
     documentNumber TEXT,
     documentDetails TEXT,
-    dateBirth TEXT,
-    expirationDate TEXT,
+    licenseClass TEXT,
+    passportNumber TEXT,
+    issuingCountry TEXT,
+    ssn TEXT,
     issueDate TEXT,
+    expirationDate TEXT,
+
+    -- IDs de Relacionamento
+    addressId INTEGER NOT NULL,
+    rentProfileId INTEGER,
+    marketplaceProfileId INTEGER,
+    profAllocatedProfileId INTEGER,
+
+    -- Variáveis soltas do User.kt
+    city TEXT,
+    state TEXT,
+    profile TEXT,
+    contractType TEXT,
+    accessKey TEXT,
     loginDateTime TEXT,
+
+    -- Caminhos de Imagem (KYC)
+    idFrontPath TEXT,
+    idBackPath TEXT,
+    selfiePath TEXT,
+
+    -- Controle de Sistema com Booleanos Tipados
     isSubscriber INTEGER AS Boolean NOT NULL DEFAULT 0,
     isConnected INTEGER AS Boolean NOT NULL DEFAULT 0,
     financialStatus INTEGER AS Boolean NOT NULL DEFAULT 0,
-    gender TEXT,
-    typeDocumentEnum TEXT,
-    validationMethod TEXT
+
+    FOREIGN KEY (addressId) REFERENCES Address(id),
+    FOREIGN KEY (profAllocatedProfileId) REFERENCES ProfAllocatedProfile(id)
 );
 
-insertUser:
-INSERT INTO UserEntity DEFAULT VALUES;
+    getUserById:
+    SELECT * FROM User WHERE id = ?;
 
-updateUser:
-UPDATE UserEntity
-SET firstName = ?, lastName = ?, email = ?, phoneNumber = ?, password = ?,
-    city = ?, state = ?, isSubscriber = ?, isConnected = ?, financialStatus = ?,
-    gender = ?, typeDocumentEnum = ?, validationMethod = ?
-WHERE id = ?;
+    getAllUsers:
+    SELECT * FROM User;
 
-getUserById:
-SELECT * FROM UserEntity WHERE id = ?;
+    deleteUserById:
+    DELETE FROM User WHERE id = ?;
 
-deleteUser:
-DELETE FROM UserEntity WHERE id = ?;
+    -- Útil para o Repository saber qual ID foi gerado após um Insert
+    getLastInsertId:
+    SELECT last_insert_rowid();

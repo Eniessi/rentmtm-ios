@@ -1,11 +1,11 @@
 package com.rentmtm.mapper
 
 import com.rentmtm.model.Employment
-import com.rentmtm.db.EmploymentEntity
+import com.rentmtm.db.Employment as DbEmployment
 
-fun EmploymentEntity.toDomainModel(): Employment {
+fun DbEmployment.toDomainModel(): Employment {
     return Employment(
-        id = this.idEmployment.toInt(),
+        id = this.id.toInt(),
         employer = this.employer,
         position = this.position,
         startDate = this.startDate,
@@ -15,9 +15,9 @@ fun EmploymentEntity.toDomainModel(): Employment {
     )
 }
 
-fun Employment.toEntity(): EmploymentEntity {
-    return EmploymentEntity(
-        idEmployment = this.id.toLong(),
+fun Employment.toEntity(): DbEmployment {
+    return DbEmployment(
+        id = this.id.toLong(),
         employer = this.employer,
         position = this.position,
         startDate = this.startDate,

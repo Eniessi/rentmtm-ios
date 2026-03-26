@@ -2,19 +2,19 @@ package com.rentmtm.mapper
 
 import com.rentmtm.model.Language
 import com.rentmtm.model.enums.LanguageFluency
-import com.rentmtm.db.LanguageEntity
+import com.rentmtm.db.Language as DbLanguage
 
-fun LanguageEntity.toDomainModel(): Language {
+fun DbLanguage.toDomainModel(): Language {
     return Language(
-        id = this.idLanguage.toInt(),
+        id = this.id.toInt(),
         name = this.name,
         fluencyLevel = this.fluencyLevel?.let { enumValueOf<LanguageFluency>(it) }
     )
 }
 
-fun Language.toEntity(): LanguageEntity {
-    return LanguageEntity(
-        idLanguage = this.id.toLong(),
+fun Language.toEntity(): DbLanguage {
+    return DbLanguage(
+        id = this.id.toLong(),
         name = this.name,
         fluencyLevel = this.fluencyLevel?.name
     )

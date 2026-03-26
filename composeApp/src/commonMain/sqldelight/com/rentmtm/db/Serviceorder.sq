@@ -1,0 +1,67 @@
+CREATE TABLE ServiceOrder (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    budgetId INTEGER NOT NULL UNIQUE,
+    customerId INTEGER NOT NULL,
+    professionalId INTEGER NOT NULL,
+    finalTitle TEXT,
+    finalValue REAL NOT NULL,
+    status TEXT NOT NULL,
+    paymentStatus TEXT NOT NULL,
+    checkInCode TEXT,
+    actualStartTime TEXT,
+    completionTime TEXT,
+    FOREIGN KEY (budgetId) REFERENCES Budget(id),
+    FOREIGN KEY (customerId) REFERENCES User(id),
+    FOREIGN KEY (professionalId) REFERENCES User(id)
+);
+
+-- 1. CREATE
+-- Nota: Não precisamos alinhar tudo como no Profile porque são menos colunas,
+-- mas a ordem exata é crucial.
+insertServiceOrder:
+INSERT INTO ServiceOrder (
+    budgetId, customerId, professionalId, finalTitle, finalValue,
+    status, paymentStatus, checkInCode, actualStartTime, completionTime
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+getLastInsertId:
+SELECT last_insert_rowid();
+
+
+-- 2. READ
+getServiceOrderById:
+SELECT * FROM ServiceOrder WHERE id = ?;
+
+getAllServiceOrders:
+SELECT * FROM ServiceOrder;
+
+-- 🔥 AS QUERIES MAIS IMPORTANTES DO TEU APP:
+-- O Cliente vai abrir o app e ver o histórico de serviços que ele contratou:
+getServiceOrdersByCustomerId:
+SELECT * FROM ServiceOrder WHERE customerId = ?;
+
+-- O Profissional vai abrir o app e ver a agenda de serviços que ele tem para executar:
+getServiceOrdersByProfessionalId:
+SELECT * FROM ServiceOrder WHERE professionalId = ?;
+
+
+-- 3. UPDATE
+-- Numa Ordem de Serviço, NUNCA atualizamos o Cliente ou o Profissional depois de criada.
+-- Atualizamos apenas a progressão temporal e financeira do serviço.
+updateServiceProgression:
+UPDATE ServiceOrder
+SET status = ?, paymentStatus = ?, actualStartTime = ?, completionTime = ?
+WHERE id = ?;
+
+-- Útil para o momento exato em que o profissional chega na casa do cliente e valida o código
+updateCheckIn:
+UPDATE ServiceOrder
+SET checkInCode = ?, actualStartTime = ?, status = ?
+WHERE id = ?;
+
+
+-- 4. DELETE
+-- (Tech Debt: Evitar usar em produção. Preferir mudar o status para 'CANCELED')
+deleteServiceOrderById:
+DELETE FROM ServiceOrder WHERE id = ?;

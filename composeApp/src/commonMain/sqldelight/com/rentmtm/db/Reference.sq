@@ -1,5 +1,5 @@
-CREATE TABLE ReferenceEntity (
-    idReference INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+CREATE TABLE Reference (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     name TEXT,
     company TEXT,
     relationship TEXT,
@@ -7,16 +7,16 @@ CREATE TABLE ReferenceEntity (
 );
 
 insertReference:
-INSERT INTO ReferenceEntity(name, company, relationship, contactInfo)
+INSERT INTO Reference(name, company, relationship, contactInfo)
 VALUES (?, ?, ?, ?);
 
 getAllReferences:
-SELECT * FROM ReferenceEntity;
+SELECT * FROM Reference;
 
 getReferenceById:
-SELECT * FROM ReferenceEntity
-WHERE idReference = ?;
+SELECT * FROM Reference
+WHERE id = ?;
 
 deleteReferenceById:
-DELETE FROM ReferenceEntity
-WHERE idReference = ?;
+DELETE FROM Reference
+WHERE id = ?;

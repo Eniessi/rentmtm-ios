@@ -1,5 +1,5 @@
-CREATE TABLE EmploymentEntity (
-    idEmployment INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+CREATE TABLE Employment (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     employer TEXT,
     position TEXT,
     startDate TEXT,
@@ -9,16 +9,16 @@ CREATE TABLE EmploymentEntity (
 );
 
 insertEmployment:
-INSERT INTO EmploymentEntity(employer, position, startDate, endDate, reasonForLeaving, responsibilities)
+INSERT INTO Employment(employer, position, startDate, endDate, reasonForLeaving, responsibilities)
 VALUES (?, ?, ?, ?, ?, ?);
 
 getAllEmployments:
-SELECT * FROM EmploymentEntity;
+SELECT * FROM Employment;
 
 getEmploymentById:
-SELECT * FROM EmploymentEntity
-WHERE idEmployment = ?;
+SELECT * FROM Employment
+WHERE id = ?;
 
 deleteEmploymentById:
-DELETE FROM EmploymentEntity
-WHERE idEmployment = ?;
+DELETE FROM Employment
+WHERE id = ?;

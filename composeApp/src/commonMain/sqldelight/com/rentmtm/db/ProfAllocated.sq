@@ -1,0 +1,77 @@
+import kotlin.Boolean;
+import com.rentmtm.model.enums.EmploymentType;
+import com.rentmtm.model.enums.WorkAuthorization;
+import com.rentmtm.model.enums.SalaryPeriod;
+import com.rentmtm.model.enums.EducationLevel;
+import com.rentmtm.model.enums.WorkSchedule;
+
+CREATE TABLE ProfAllocatedProfile (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    professionalTitle TEXT,
+    fieldOfWork TEXT,
+    yearsOfExperience INTEGER,
+    employmentType TEXT AS EmploymentType, -- ⬅️ Padrão Ouro: Enum Direto
+    otherEmploymentType TEXT,
+    companyName TEXT,
+    businessAddressId INTEGER,
+    workAuthorization TEXT AS WorkAuthorization,
+    workVisaType TEXT,
+    otherWorkAuthorization TEXT,
+    expectedSalary REAL,
+    salaryPeriod TEXT AS SalaryPeriod,
+    educationLevel TEXT AS EducationLevel,
+    otherEducation TEXT,
+    fieldOfStudy TEXT,
+    availabilityToStart TEXT,
+    workSchedule TEXT AS WorkSchedule,
+
+    -- ⬅️ Padrão Ouro: Booleans Nativos
+    willingToRelocate INTEGER AS Boolean NOT NULL DEFAULT 0,
+    hasDriverLicense INTEGER AS Boolean NOT NULL DEFAULT 0,
+    willingToTravel INTEGER AS Boolean NOT NULL DEFAULT 0,
+    hasLegalWorkRestrictions INTEGER AS Boolean NOT NULL DEFAULT 0,
+    additionalComments TEXT,
+    FOREIGN KEY (businessAddressId) REFERENCES Address(id)
+);
+
+insertProfile:
+INSERT INTO ProfAllocatedProfile (
+    professionalTitle, fieldOfWork, yearsOfExperience, employmentType, otherEmploymentType,
+    companyName, businessAddressId, workAuthorization, workVisaType, otherWorkAuthorization,
+    expectedSalary, salaryPeriod, educationLevel, otherEducation, fieldOfStudy,
+    availabilityToStart, workSchedule, willingToRelocate, hasDriverLicense, willingToTravel,
+    hasLegalWorkRestrictions, additionalComments
+)
+VALUES (
+    ?, ?, ?, ?, ?,
+    ?, ?, ?, ?, ?,
+    ?, ?, ?, ?, ?,
+    ?, ?, ?, ?, ?,
+    ?, ?
+);
+
+getLastInsertId:
+SELECT last_insert_rowid();
+
+-- 2. READ (Leituras)
+getProfileById:
+SELECT * FROM ProfAllocatedProfile WHERE id = ?;
+
+getAllProfiles:
+SELECT * FROM ProfAllocatedProfile;
+
+-- 3. UPDATE (Atualização Completa - "Fat Update")
+-- Como os perfis costumam ser editados em uma tela grande de formulário, fazemos o update em massa.
+updateProfile:
+UPDATE ProfAllocatedProfile
+SET
+    professionalTitle = ?, fieldOfWork = ?, yearsOfExperience = ?, employmentType = ?, otherEmploymentType = ?,
+    companyName = ?, businessAddressId = ?, workAuthorization = ?, workVisaType = ?, otherWorkAuthorization = ?,
+    expectedSalary = ?, salaryPeriod = ?, educationLevel = ?, otherEducation = ?, fieldOfStudy = ?,
+    availabilityToStart = ?, workSchedule = ?, willingToRelocate = ?, hasDriverLicense = ?, willingToTravel = ?,
+    hasLegalWorkRestrictions = ?, additionalComments = ?
+WHERE id = ?;
+
+-- 4. DELETE
+deleteProfileById:
+DELETE FROM ProfAllocatedProfile WHERE id = ?;

@@ -1,0 +1,16 @@
+CREATE TABLE Budget (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    customerId INTEGER NOT NULL,
+    professionalId INTEGER NOT NULL,
+    serviceTitle TEXT NOT NULL,
+    serviceDescription TEXT,
+    estimatedValue REAL NOT NULL,
+    requestDate TEXT,
+    scheduledDate TEXT,
+    status TEXT NOT NULL, -- PENDING, ACCEPTED, etc.
+    addressId INTEGER, -- Localização do serviço
+    paymentMethodId INTEGER,
+    FOREIGN KEY (customerId) REFERENCES User(id),
+    FOREIGN KEY (professionalId) REFERENCES User(id),
+    FOREIGN KEY (addressId) REFERENCES Address(id)
+);

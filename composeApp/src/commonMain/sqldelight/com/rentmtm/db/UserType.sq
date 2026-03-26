@@ -1,20 +1,20 @@
-CREATE TABLE UserTypeEntity (
-    idUserType INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+CREATE TABLE UserType (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     description TEXT,
     profileDetails TEXT
 );
 
 insertUserType:
-INSERT INTO UserTypeEntity(description, profileDetails)
+INSERT INTO UserType(description, profileDetails)
 VALUES (?, ?);
 
 getAllUserTypes:
-SELECT * FROM UserTypeEntity;
+SELECT * FROM UserType;
 
 getUserTypeById:
-SELECT * FROM UserTypeEntity
-WHERE idUserType = ?;
+SELECT * FROM UserType
+WHERE id = ?;
 
 deleteUserTypeById:
-DELETE FROM UserTypeEntity
-WHERE idUserType = ?;
+DELETE FROM UserType
+WHERE id = ?;

@@ -1,11 +1,11 @@
 package com.rentmtm.mapper
 
 import com.rentmtm.model.Reference
-import com.rentmtm.db.ReferenceEntity
+import com.rentmtm.db.Reference as DbReference
 
-fun ReferenceEntity.toDomainModel(): Reference {
+fun DbReference.toDomainModel(): Reference {
     return Reference(
-        id = this.idReference.toInt(),
+        id = this.id.toInt(),
         name = this.name,
         company = this.company,
         relationship = this.relationship,
@@ -13,9 +13,9 @@ fun ReferenceEntity.toDomainModel(): Reference {
     )
 }
 
-fun Reference.toEntity(): ReferenceEntity {
-    return ReferenceEntity(
-        idReference = this.id.toLong(),
+fun Reference.toEntity(): DbReference {
+    return DbReference(
+        id = this.id.toLong(),
         name = this.name,
         company = this.company,
         relationship = this.relationship,

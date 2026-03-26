@@ -71,6 +71,12 @@ data class PersonalInfoState(
     val password: String = ""
 )
 
+data class CertificationEntry(
+    val certName: String = "",
+    val certOrg: String = "",
+    val certDate: String = ""
+)
+
 data class AddressState(
     val street: String = "",
     val number: String = "",
@@ -123,6 +129,13 @@ data class LanguageEntry(
     val fluency: String = ""
 )
 
+data class ReferenceEntry(
+    val name: String = "",
+    val company: String = "",
+    val relationship: String = "",
+    val contact: String = ""
+)
+
 data class QualificationsState(
     val isHighSchool: Boolean = false,
     val isAssociate: Boolean = false,
@@ -132,9 +145,6 @@ data class QualificationsState(
     val isOtherEdu: Boolean = false,
     val otherEduText: String = "",
     val fieldOfStudy: String = "",
-    val certName: String = "",
-    val certOrg: String = "",
-    val certDate: String = "",
     val isIT: Boolean = false,
     val isEng: Boolean = false,
     val isHealth: Boolean = false,
@@ -143,11 +153,9 @@ data class QualificationsState(
     val isMark: Boolean = false,
     val isOtherSkill: Boolean = false,
     val otherSkillText: String = "",
+    val certifications: List<CertificationEntry> = listOf(CertificationEntry()),
     val languages: List<LanguageEntry> = listOf(LanguageEntry()),
-    val refName: String = "",
-    val refCompany: String = "",
-    val refRel: String = "",
-    val refContact: String = ""
+    val references: List<ReferenceEntry> = listOf(ReferenceEntry())
 )
 
 data class EmploymentEntry(
@@ -304,6 +312,46 @@ class RegisterViewModel : ViewModel() { // ⬅️ Agora é um ViewModel de verda
     fun updateEmployment(index: Int, updatedEntry: EmploymentEntry) {
         employmentHistory = employmentHistory.copy(
             experiences = employmentHistory.experiences.mapIndexed { i, oldEntry ->
+                if (i == index) updatedEntry else oldEntry
+            }
+        )
+    }
+
+    fun addReference() {
+        qualifications = qualifications.copy(
+            references = qualifications.references + ReferenceEntry()
+        )
+    }
+
+    fun removeReference(index: Int) {
+        qualifications = qualifications.copy(
+            references = qualifications.references.filterIndexed { i, _ -> i != index }
+        )
+    }
+
+    fun updateReference(index: Int, updatedEntry: ReferenceEntry) {
+        qualifications = qualifications.copy(
+            references = qualifications.references.mapIndexed { i, oldEntry ->
+                if (i == index) updatedEntry else oldEntry
+            }
+        )
+    }
+
+    fun addCertification() {
+        qualifications = qualifications.copy(
+            certifications = qualifications.certifications + CertificationEntry()
+        )
+    }
+
+    fun removeCertification(index: Int) {
+        qualifications = qualifications.copy(
+            certifications = qualifications.certifications.filterIndexed { i, _ -> i != index }
+        )
+    }
+
+    fun updateCertification(index: Int, updatedEntry: CertificationEntry) {
+        qualifications = qualifications.copy(
+            certifications = qualifications.certifications.mapIndexed { i, oldEntry ->
                 if (i == index) updatedEntry else oldEntry
             }
         )

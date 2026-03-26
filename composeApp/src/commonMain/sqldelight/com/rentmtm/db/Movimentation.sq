@@ -1,0 +1,58 @@
+CREATE TABLE Movimentation (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    serviceOrderId INTEGER NOT NULL,
+    paymentMethodId INTEGER NOT NULL,
+    grossAmount REAL NOT NULL,
+    feeAmount REAL NOT NULL,
+    netAmount REAL NOT NULL,
+    type TEXT NOT NULL,
+    status TEXT NOT NULL,
+    transactionCode TEXT,
+    createdAt TEXT NOT NULL,
+    clearedAt TEXT,
+    FOREIGN KEY (serviceOrderId) REFERENCES ServiceOrder(id),
+    FOREIGN KEY (paymentMethodId) REFERENCES PaymentMethod(id)
+);
+
+insertMovimentation:
+INSERT INTO Movimentation (
+    serviceOrderId,
+    paymentMethodId,
+    grossAmount,
+    feeAmount,
+    netAmount,
+    type,
+    status,
+    transactionCode,
+    createdAt,
+    clearedAt
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Útil para pegar o ID gerado e usar no seu Repository
+getLastInsertId:
+SELECT last_insert_rowid();
+
+-- 2. READ (Leituras)
+getMovimentationById:
+SELECT * FROM Movimentation WHERE id = ?;
+
+getAllMovimentations:
+SELECT * FROM Movimentation;
+
+-- (Tech Lead Tip: Você quase sempre vai querer buscar as movimentações de uma Ordem de Serviço específica)
+getMovimentationsByServiceOrder:
+SELECT * FROM Movimentation WHERE serviceOrderId = ?;
+
+-- 3. UPDATE (Atualização Parcial de Transação)
+-- Não atualizamos valores (amounts) por questões de auditoria, apenas o status de pagamento.
+updateStatusAndClearance:
+UPDATE Movimentation
+SET status = ?, clearedAt = ?
+WHERE id = ?;
+
+-- 4. DELETE (Hard Delete)
+-- Nota Arquitetural: Se o app crescer para algo contábil sério, considere trocar isso por
+-- um "Soft Delete" (adicionando uma coluna 'isDeleted' na tabela). Mas por agora, mantemos o simples.
+deleteMovimentationById:
+DELETE FROM Movimentation WHERE id = ?;

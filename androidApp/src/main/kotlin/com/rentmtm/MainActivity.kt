@@ -46,8 +46,6 @@ class MainActivity : ComponentActivity() {
 
         super.onCreate(savedInstanceState)
 
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
         val driverFactory = DriverFactory(this)
         val database = createDatabase(driverFactory)
         val users = database.userQueries.getAllUsers().executeAsList()

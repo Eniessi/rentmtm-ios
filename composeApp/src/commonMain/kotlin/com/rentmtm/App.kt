@@ -1,6 +1,8 @@
 package com.rentmtm
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.lightColorScheme
@@ -55,18 +57,24 @@ enum class Routes {
 @Composable
 fun App() {
     MaterialTheme(colorScheme = MtmColorScheme) {
+        // 1. A Surface agora não tem mais padding. Ela pinta a tela de ponta a ponta (Edge-to-Edge).
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            val navController = rememberNavController()
-
-            val registerViewModel = remember { RegisterViewModel() }
-
-            NavHost(
-                navController = navController,
-                startDestination = Routes.Login.name
+            // 2. O Box protege apenas o CONTEÚDO, deixando o fundo livre por trás das barras.
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .safeDrawingPadding()
             ) {
+                val navController = rememberNavController()
+                val registerViewModel = remember { RegisterViewModel() }
+
+                NavHost(
+                    navController = navController,
+                    startDestination = Routes.Login.name
+                ) {
                 // --- LOGIN ---
                 composable(route = Routes.Login.name) {
                     LoginScreen(
@@ -191,4 +199,5 @@ fun App() {
             }
         }
     }
+}
 }

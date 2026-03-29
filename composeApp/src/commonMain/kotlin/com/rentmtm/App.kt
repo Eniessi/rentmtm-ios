@@ -67,7 +67,6 @@ fun App() {
                 navController = navController,
                 startDestination = Routes.Login.name
             ) {
-
                 // --- LOGIN ---
                 composable(route = Routes.Login.name) {
                     LoginScreen(

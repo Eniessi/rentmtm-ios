@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rentmtm.utils.ImageStorage
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -14,6 +15,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlin.time.Clock
 
 // ==========================================
 // MOLDES DA API (Zippopotam.us)
@@ -220,6 +222,30 @@ class RegisterViewModel : ViewModel() { // ⬅️ Agora é um ViewModel de verda
     // ==========================================
     // LÓGICA DE NEGÓCIO E APIs
     // ==========================================
+
+    fun saveDocumentPhoto(bytes: ByteArray, documentType: String) {
+        viewModelScope.launch {
+            val timestamp = Clock.System.now().toEpochMilliseconds()
+            val fileName = "doc_${documentType}_${timestamp}.jpg"
+
+            try {
+                // Vai para a thread de I/O silenciosamente e volta com o caminho
+                val savedPath = ImageStorage.saveImageToCache(bytes, fileName)
+                println("Tech Lead Log -> Physical image saved in: $savedPath")
+
+                // Aqui tu atualizas o estado da tua tela.
+                // (Adapte as variáveis abaixo de acordo com o teu data class IdentityPhotos)
+                identityPhotos = when (documentType) {
+                    "front" -> identityPhotos.copy(idFrontPath = savedPath)
+                    "back" -> identityPhotos.copy(idBackPath = savedPath)
+                    "selfie" -> identityPhotos.copy(selfiePath = savedPath)
+                    else -> identityPhotos
+                }
+            } catch (e: Exception) {
+                println("Tech Lead Log -> Erro catastrófico ao salvar imagem: ${e.message}")
+            }
+        }
+    }
 
     fun updateProfileType(type: ProfileType) {
         profileType = type

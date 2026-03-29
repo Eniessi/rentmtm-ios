@@ -6,12 +6,14 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -26,6 +28,10 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.preat.peekaboo.image.picker.SelectionMode
+import com.preat.peekaboo.image.picker.rememberImagePickerLauncher
+import com.preat.peekaboo.ui.camera.PeekabooCamera
+import com.preat.peekaboo.ui.camera.rememberPeekabooCameraState
 import com.rentmtm.viewmodel.RegisterViewModel
 import org.jetbrains.compose.resources.painterResource
 import rentmtm.composeapp.generated.resources.Res
@@ -39,8 +45,84 @@ fun RegisterUserStep5Screen(
     onNext: () -> Unit,
     onCompleteLater: () -> Unit
 ) {
+    // 1. O Estado da Câmera Nativa
+    var showCamera by remember { mutableStateOf(false) }
+    val cameraState = rememberPeekabooCameraState(onCapture = { byteArray ->
+        if (byteArray != null) {
+            // Enviamos os bytes para o ViewModel processar
+            viewModel.saveDocumentPhoto(byteArray, "front") // Adapte o "front" dinamicamente depois
+        }
+        showCamera = false // Fecha o visor da câmera após o clique
+    })
+
+    val uiScope = rememberCoroutineScope()
+
+    // 2. Passa o uiScope como parâmetro para o Peekaboo
+    val galleryLauncher = rememberImagePickerLauncher(
+        selectionMode = SelectionMode.Single,
+        scope = uiScope, // <-- A CORREÇÃO ESTÁ AQUI
+        onResult = { byteArrays ->
+            byteArrays.firstOrNull()?.let { bytes ->
+                // O teu ViewModel já faz o trabalho pesado de forma limpa!
+                viewModel.saveDocumentPhoto(bytes, "front")
+            }
+        }
+    )
+
+    // 3. O "Hijack" da Tela
+    // Se a câmera estiver ativa, ela toma conta de toda a tela.
+    if (showCamera) {
+        // Usamos um Box raiz para colocar os botões POR CIMA da câmera
+        Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+
+            // 1. O Motor: O Visor da Câmera (Fica no fundo)
+            PeekabooCamera(
+                state = cameraState,
+                modifier = Modifier.fillMaxSize(),
+                permissionDeniedContent = {
+                    Box(modifier = Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
+                        // Teu código de permissão negada continua aqui...
+                    }
+                }
+            )
+
+            // 2. O Botão de Fechar / Cancelar (Canto superior esquerdo)
+            IconButton(
+                onClick = { showCamera = false },
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(top = 48.dp, start = 16.dp) // padding seguro
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close Camera",
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+
+            // 3. O Botão de Disparo (Bottom Center)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 48.dp) // Afasta da borda inferior
+                    .size(72.dp) // Tamanho clássico de botão de câmera
+                    .clip(CircleShape)
+                    .background(Color.White)
+                    .border(4.dp, Color.LightGray, CircleShape)
+                    .clickable {
+                        // A MÁGICA ACONTECE AQUI:
+                        // Isto diz ao Peekaboo para congelar o frame e devolver o ByteArray!
+                        cameraState.capture()
+                    }
+            )
+        }
+        return // Impede o formulário de renderizar
+    }
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .systemBarsPadding(),
     ) {
         Column(
             modifier = Modifier
@@ -115,6 +197,7 @@ fun RegisterUserStep5Screen(
                     isSelected = viewModel.identityPhotos.selectedMethod == "file",
                     onClick = {
                         viewModel.identityPhotos = viewModel.identityPhotos.copy(selectedMethod = "file")
+                        galleryLauncher.launch() // DISPARA A GALERIA
                     },
                     modifier = Modifier.weight(1f)
                 )
@@ -125,6 +208,7 @@ fun RegisterUserStep5Screen(
                     isSelected = viewModel.identityPhotos.selectedMethod == "camera",
                     onClick = {
                         viewModel.identityPhotos = viewModel.identityPhotos.copy(selectedMethod = "camera")
+                        showCamera = true // MUDA O ESTADO E DESENHA A CÂMERA FULLSCREEN
                     },
                     modifier = Modifier.weight(1f)
                 )

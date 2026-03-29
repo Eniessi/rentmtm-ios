@@ -1,0 +1,15 @@
+CREATE TABLE UserImages (
+    userId INTEGER NOT NULL,
+    profilePicturePath TEXT,
+    idFrontPath TEXT,
+    idBackPath TEXT,
+    selfiePath TEXT,
+    PRIMARY KEY (userId)
+);
+
+insertOrReplaceUserImages:
+INSERT OR REPLACE INTO UserImages(userId, profilePicturePath, idFrontPath, idBackPath, selfiePath)
+VALUES (?, ?, ?, ?, ?);
+
+getImagesByUserId:
+SELECT * FROM UserImages WHERE userId = ?;

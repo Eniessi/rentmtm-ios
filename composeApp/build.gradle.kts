@@ -52,6 +52,9 @@ kotlin {
             implementation(libs.sqldelight.coroutines.extensions)
             implementation("io.github.kevinnzou:compose-webview-multiplatform:1.9.40") // ou a versão mais recente
             implementation("app.cash.sqldelight:primitive-adapters:2.0.1")
+            implementation(libs.okio)
+            implementation(libs.peekaboo.ui)
+            implementation(libs.peekaboo.image.picker)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

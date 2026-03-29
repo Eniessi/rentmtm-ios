@@ -19,6 +19,8 @@ serialization = "1.7.3"
 navigationCompose = "2.8.0-alpha10"
 sqlDelight = "2.0.2"
 coreSplashscreen = "1.2.0"
+peekaboo = "0.5.2"
+okio = "3.9.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -50,6 +52,9 @@ sqldelight-native-driver = { module = "app.cash.sqldelight:native-driver", versi
 sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqlDelight" }
 sqldelight-coroutines-extensions = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqlDelight" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
+peekaboo-ui = { module = "io.github.onseok:peekaboo-ui", version.ref = "peekaboo" }
+peekaboo-image-picker = { module = "io.github.onseok:peekaboo-image-picker", version.ref = "peekaboo" }
+okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

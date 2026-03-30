@@ -67,7 +67,8 @@ fun HomeScreen(
     onLogout: () -> Unit,
     // 1. NOVO PARÂMETRO: Função para abrir a webview (recebe URL e Título)
     onNavigateToWeb: (String, String) -> Unit,
-    onNavigateToRequestServices: () -> Unit
+    onNavigateToRequestServices: () -> Unit,
+    onNavigateToMyAccount: () -> Unit
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -164,8 +165,20 @@ fun HomeScreen(
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
 
+                if (isLoggedIn) {
+                    NavigationDrawerItem(
+                        label = { Text("My Account", fontFamily = FontFamily.Default, fontSize = 16.sp, color = MaterialTheme.colorScheme.tertiary) },
+                        selected = false,
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            onNavigateToMyAccount() // ⬅️ CHAMA A ROTA
+                        },
+                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                    )
+                }
+
                 // OPÇÕES GENÉRICAS RESTANTES
-                val menuOptions = listOf("Request Services", "My Account", "Lilo Virtual Assistent", "Work With Us", "Prof. Allocated Area", "Talk to us")
+                val menuOptions = listOf("Request Services", "Lilo Virtual Assistent", "Work With Us", "Prof. Allocated Area", "Talk to us")
 
                 menuOptions.forEach { option ->
                     NavigationDrawerItem(
@@ -300,7 +313,8 @@ fun HomeScreenPreview() {
             onNavigateToLogin = {},
             onLogout = {},
             onNavigateToWeb = { _, _ -> }, // Preview falso
-            onNavigateToRequestServices = {}
+            onNavigateToRequestServices = {},
+            onNavigateToMyAccount = {}
         )
     }
 }

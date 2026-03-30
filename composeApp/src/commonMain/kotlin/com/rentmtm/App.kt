@@ -19,6 +19,7 @@ import androidx.navigation.navArgument
 // Imports de UI e Navigation
 import com.rentmtm.navigation.professionalRegistrationGraph
 import com.rentmtm.navigation.registerUserNavGraph
+import com.rentmtm.ui.account.MyAccountScreen
 import com.rentmtm.ui.budget.BudgetScreen
 import com.rentmtm.ui.forgotpassword.ForgotPasswordScreen
 import com.rentmtm.ui.home.HomeScreen
@@ -55,7 +56,8 @@ enum class Routes {
     WebBrowser,
     Home,
     RequestServices,
-    Budget
+    Budget,
+    MyAccount
 }
 
 @Composable
@@ -168,19 +170,29 @@ fun App() {
                 composable(route = Routes.Home.name) {
                     HomeScreen(
                         userEmail = "usuario@mtm.com",
-                        isLoggedIn = true,
+                        isLoggedIn = true, // Lembre-se que você mockou isso como true
                         currentRoute = Routes.Home.name,
                         onNavigateToLogin = { navController.navigate(Routes.Login.name) },
                         onLogout = { navController.navigate(Routes.Login.name) { popUpTo(0) } },
-                        // A MÁGICA ACONTECE AQUI:
                         onNavigateToWeb = { url, title ->
-                            // Usamos o navArgument para mandar os textos junto com a rota
                             val encodedUrl = url.encodeURLParameter()
                             navController.navigate("${Routes.WebBrowser.name}/$encodedUrl/$title")
                         },
-                        onNavigateToRequestServices = { // ⬅️ LIGANDO O CLIQUE DA DRAWER
+                        onNavigateToRequestServices = {
                             navController.navigate(Routes.RequestServices.name)
+                        },
+                        onNavigateToMyAccount = { // ⬅️ LIGANDO A NAVEGAÇÃO
+                            navController.navigate(Routes.MyAccount.name)
                         }
+                    )
+                }
+
+                // --- MY ACCOUNT (CONFIG) ---
+                composable(route = Routes.MyAccount.name) {
+                    val configViewModel = remember { ConfigViewModel() }
+                    MyAccountScreen(
+                        viewModel = configViewModel,
+                        onBack = { navController.popBackStack() }
                     )
                 }
 

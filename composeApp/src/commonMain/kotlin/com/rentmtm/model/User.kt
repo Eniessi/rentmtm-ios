@@ -58,9 +58,9 @@ data class User(
     var isConnected: Boolean = false,
     var financialStatus: Boolean = false,
 
-    var idFrontPath: String?,
-    var idBackPath: String?,
-    var selfiePath: String?,
+    var idFrontPath: String? = null,
+    var idBackPath: String? = null,
+    var selfiePath: String? = null,
 
     // novos atributos de novos models
     var sentBudgets: List<Budget> = emptyList(),     // Orçamentos que ele pediu (como cliente)

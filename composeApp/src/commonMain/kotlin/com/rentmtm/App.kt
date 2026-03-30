@@ -19,11 +19,13 @@ import androidx.navigation.navArgument
 // Imports de UI e Navigation
 import com.rentmtm.navigation.professionalRegistrationGraph
 import com.rentmtm.navigation.registerUserNavGraph
+import com.rentmtm.ui.budget.BudgetScreen
 import com.rentmtm.ui.forgotpassword.ForgotPasswordScreen
 import com.rentmtm.ui.home.HomeScreen
 import com.rentmtm.ui.login.LoginScreen
 import com.rentmtm.ui.newpassword.NewPasswordScreen
 import com.rentmtm.ui.profile.ProfileFlow
+import com.rentmtm.ui.request.RequestServiceSelectionScreen
 import com.rentmtm.viewmodel.*
 import com.rentmtm.ui.signup.SignUpScreen
 import com.rentmtm.ui.webview.WebBrowserScreen
@@ -51,7 +53,9 @@ enum class Routes {
     ForgotPassword,
     NewPassword,
     WebBrowser,
-    Home
+    Home,
+    RequestServices,
+    Budget
 }
 
 @Composable
@@ -173,7 +177,35 @@ fun App() {
                             // Usamos o navArgument para mandar os textos junto com a rota
                             val encodedUrl = url.encodeURLParameter()
                             navController.navigate("${Routes.WebBrowser.name}/$encodedUrl/$title")
+                        },
+                        onNavigateToRequestServices = { // ⬅️ LIGANDO O CLIQUE DA DRAWER
+                            navController.navigate(Routes.RequestServices.name)
                         }
+                    )
+                }
+
+                // --- REQUEST SERVICES ---
+                composable(route = Routes.RequestServices.name) {
+                    RequestServiceSelectionScreen(
+                        onBack = { navController.popBackStack() },
+                        onNavigateToBudget = { selectedProfession ->
+                            // Tech Lead Note: No futuro, você pode passar a 'selectedProfession'
+                            // como argumento na rota para pré-preencher o BudgetViewModel.
+                            navController.navigate(Routes.Budget.name)
+                        }
+                    )
+                }
+
+                // --- BUDGET SCREEN (VISÃO DO CLIENTE) ---
+                composable(route = Routes.Budget.name) {
+                    // Tech Lead Note: Idealmente, o ViewModel deveria ser provido via Koin/Dagger.
+                    // Estamos instanciando manualmente para manter a consistência atual do App.kt
+                    val budgetViewModel = remember { BudgetViewModel() }
+                    // Nota: O BudgetViewModel já é inicializado com ViewerRole.CLIENT por padrão.
+
+                    BudgetScreen(
+                        viewModel = budgetViewModel,
+                        onBack = { navController.popBackStack() }
                     )
                 }
 

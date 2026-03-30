@@ -66,7 +66,8 @@ fun HomeScreen(
     onNavigateToLogin: () -> Unit,
     onLogout: () -> Unit,
     // 1. NOVO PARÂMETRO: Função para abrir a webview (recebe URL e Título)
-    onNavigateToWeb: (String, String) -> Unit
+    onNavigateToWeb: (String, String) -> Unit,
+    onNavigateToRequestServices: () -> Unit
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -164,7 +165,7 @@ fun HomeScreen(
                 )
 
                 // OPÇÕES GENÉRICAS RESTANTES
-                val menuOptions = listOf("My Account", "Lilo Virtual Assistent", "Work With Us", "Prof. Allocated Area", "Talk to us")
+                val menuOptions = listOf("Request Services", "My Account", "Lilo Virtual Assistent", "Work With Us", "Prof. Allocated Area", "Talk to us")
 
                 menuOptions.forEach { option ->
                     NavigationDrawerItem(
@@ -172,10 +173,10 @@ fun HomeScreen(
                         selected = false,
                         onClick = {
                             scope.launch { drawerState.close() }
-                            if (option == "Lilo Virtual Assistent") {
-                                showFab = false
-                            } else {
-                                showFab = true
+                            when (option) {
+                                "Request Services" -> onNavigateToRequestServices() // ⬅️ DELEGAÇÃO DA NAVEGAÇÃO
+                                "Lilo Virtual Assistent" -> showFab = false
+                                else -> showFab = true
                             }
                         },
                         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
@@ -298,7 +299,8 @@ fun HomeScreenPreview() {
             currentRoute = "Home",
             onNavigateToLogin = {},
             onLogout = {},
-            onNavigateToWeb = { _, _ -> } // Preview falso
+            onNavigateToWeb = { _, _ -> }, // Preview falso
+            onNavigateToRequestServices = {}
         )
     }
 }

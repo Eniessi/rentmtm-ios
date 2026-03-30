@@ -27,7 +27,7 @@ import com.rentmtm.ui.home.HomeScreen
 import com.rentmtm.ui.login.LoginScreen
 import com.rentmtm.ui.newpassword.NewPasswordScreen
 import com.rentmtm.ui.profile.ProfileFlow
-import com.rentmtm.ui.request.RequestServiceSelectionScreen
+import com.rentmtm.ui.request.RequestServiceFlow
 import com.rentmtm.viewmodel.*
 import com.rentmtm.ui.signup.SignUpScreen
 import com.rentmtm.ui.webview.WebBrowserScreen
@@ -229,11 +229,10 @@ fun App() {
 
                 // --- REQUEST SERVICES ---
                 composable(route = Routes.RequestServices.name) {
-                    RequestServiceSelectionScreen(
-                        onBack = { navController.popBackStack() },
+                    RequestServiceFlow(
+                        onBackToHome = { navController.popBackStack() },
                         onNavigateToBudget = { selectedProfession ->
-                            // Tech Lead Note: No futuro, você pode passar a 'selectedProfession'
-                            // como argumento na rota para pré-preencher o BudgetViewModel.
+                            // Você pode registrar no BudgetViewModel o selectedProfession aqui antes de navegar
                             navController.navigate(Routes.Budget.name)
                         }
                     )

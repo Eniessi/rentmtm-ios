@@ -17,40 +17,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
-import rentmtm.composeapp.generated.resources.Res
-import rentmtm.composeapp.generated.resources.*
-
-data class ServiceCategoryItem(
-    val name: String,
-    val imageRes: DrawableResource,
-    val description: String
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RequestServiceSelectionScreen(
     onNavigateToBudget: (String) -> Unit,
+    onNavigateToInfo: (String) -> Unit, // ⬅️ Nova callback para a info
     onBack: () -> Unit
 ) {
-    // Reutilizando os recursos, mas adicionando uma descrição para o botão "INFO"
-    val categories = remember {
-        listOf(
-            ServiceCategoryItem("Housekeeper", Res.drawable.housekeeper, "Cleaning and household organization services."),
-            ServiceCategoryItem("Inspector", Res.drawable.inspector, "Property and structural condition inspections."),
-            ServiceCategoryItem("Plumber", Res.drawable.plumber, "Installation and repair of piping and water systems."),
-            ServiceCategoryItem("Electrician", Res.drawable.electrician, "Electrical installations, wiring, and repairs."),
-            ServiceCategoryItem("Bricklayer", Res.drawable.bricklayer, "Construction, masonry, and concrete work."),
-            ServiceCategoryItem("Mechanic", Res.drawable.mechanic, "Vehicle maintenance and mechanical repairs."),
-            ServiceCategoryItem("Security Guard", Res.drawable.securityguard, "Protection and monitoring of properties or events."),
-            ServiceCategoryItem("Driver", Res.drawable.driver, "Private transportation and delivery services."),
-            ServiceCategoryItem("Other", Res.drawable.others, "Other unlisted professional services.")
-        )
-    }
-
-    var selectedCategory by remember { mutableStateOf<ServiceCategoryItem?>(null) }
-    var infoCategoryToShow by remember { mutableStateOf<ServiceCategoryItem?>(null) }
+    var selectedCategory by remember { mutableStateOf<ServiceOption?>(null) }
 
     Scaffold(
         topBar = {
@@ -61,9 +37,7 @@ fun RequestServiceSelectionScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         },
         bottomBar = {
@@ -74,7 +48,7 @@ fun RequestServiceSelectionScreen(
             ) {
                 Box(modifier = Modifier.padding(24.dp)) {
                     Button(
-                        onClick = { selectedCategory?.let { onNavigateToBudget(it.name) } },
+                        onClick = { selectedCategory?.let { onNavigateToBudget(it.title) } },
                         enabled = selectedCategory != null,
                         modifier = Modifier.fillMaxWidth().height(50.dp)
                     ) {
@@ -115,40 +89,22 @@ fun RequestServiceSelectionScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(categories) { category ->
+                items(serviceOptions) { category ->
                     ServiceCategoryCard(
                         category = category,
                         isSelected = selectedCategory == category,
                         onSelect = { selectedCategory = category },
-                        onInfoClick = { infoCategoryToShow = category }
+                        onInfoClick = { onNavigateToInfo(category.title) } // ⬅️ Delega para o fluxo pai
                     )
                 }
             }
         }
     }
-
-    // Modal de Informação (INFO)
-    infoCategoryToShow?.let { category ->
-        AlertDialog(
-            onDismissRequest = { infoCategoryToShow = null },
-            title = {
-                Text(text = category.name, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            },
-            text = {
-                Text(text = category.description, fontSize = 16.sp)
-            },
-            confirmButton = {
-                TextButton(onClick = { infoCategoryToShow = null }) {
-                    Text("Close")
-                }
-            }
-        )
-    }
 }
 
 @Composable
 fun ServiceCategoryCard(
-    category: ServiceCategoryItem,
+    category: ServiceOption,
     isSelected: Boolean,
     onSelect: () -> Unit,
     onInfoClick: () -> Unit
@@ -174,12 +130,12 @@ fun ServiceCategoryCard(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Image(
                         painter = painterResource(category.imageRes),
-                        contentDescription = category.name,
+                        contentDescription = category.title,
                         modifier = Modifier.size(48.dp)
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = category.name,
+                        text = category.title,
                         textAlign = TextAlign.Center,
                         fontSize = 14.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,

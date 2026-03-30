@@ -1,12 +1,16 @@
 package com.rentmtm.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.rentmtm.model.Budget
 import com.rentmtm.model.enums.BudgetStatus
+import com.rentmtm.utils.ImageStorage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlin.time.Clock
 
 enum class ViewerRole { CLIENT, PROFESSIONAL }
 
@@ -15,7 +19,7 @@ data class BudgetUiState(
     val role: ViewerRole = ViewerRole.CLIENT,
     val status: BudgetStatus = BudgetStatus.PENDING,
 
-    // UI Fields
+    // UI Fields (Dados do Orçamento)
     val serviceTitle: String = "",
     val serviceDescription: String = "",
     val serviceLocationInput: String = "",
@@ -23,6 +27,9 @@ data class BudgetUiState(
     val additionalNotes: String = "",
     val estimatedValueInput: String = "",
     val selectedPaymentMethodId: Long? = null,
+
+    // NOVA PROPRIEDADE: Controla as 10 fotos. A chave é o index (0 a 9) e o valor é o caminho local.
+    val capturedPhotos: Map<Int, String> = emptyMap(),
 
     // UI Metadata
     val isSubmitEnabled: Boolean = false
@@ -67,6 +74,28 @@ class BudgetViewModel : ViewModel() {
     fun onQuoteValueChanged(text: String) {
         if (text.isEmpty() || text.matches(Regex("^\\d*\\.?\\d*$"))) {
             _uiState.update { it.copy(estimatedValueInput = text) }
+        }
+    }
+
+    fun saveBudgetPhoto(slotIndex: Int, bytes: ByteArray) {
+        viewModelScope.launch {
+            val timestamp = Clock.System.now().toEpochMilliseconds()
+            val fileName = "budget_photo_slot_${slotIndex}_${timestamp}.jpg"
+
+            try {
+                // Vai para a thread de I/O silenciosamente e salva no cache
+                val savedPath = ImageStorage.saveImageToCache(bytes, fileName)
+
+                // Atualizamos o mapa mantendo a imutabilidade do StateFlow
+                _uiState.update { currentState ->
+                    val newPhotosMap = currentState.capturedPhotos.toMutableMap()
+                    newPhotosMap[slotIndex] = savedPath
+                    currentState.copy(capturedPhotos = newPhotosMap)
+                }
+                println("Tech Lead Log -> Budget photo saved at: $savedPath for slot $slotIndex")
+            } catch (e: Exception) {
+                println("Tech Lead Log -> Error saving budget photo: ${e.message}")
+            }
         }
     }
 

@@ -20,7 +20,8 @@ import com.rentmtm.viewmodel.BudgetUiState
 @Composable
 fun BudgetScreen(
     viewModel: BudgetViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNextToPhotos: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -33,7 +34,7 @@ fun BudgetScreen(
         onPaymentMethodChange = viewModel::onPaymentMethodSelected,
         onAdditionalNotesChange = viewModel::onAdditionalNotesChanged,
         onQuoteValueChange = viewModel::onQuoteValueChanged,
-        onSubmitRequest = viewModel::submitBudgetRequest,
+        onSubmitRequest = onNextToPhotos,
         onSendQuote = viewModel::sendQuote
     )
 }
@@ -208,7 +209,7 @@ private fun BudgetBottomActions(
                     enabled = state.isSubmitEnabled,
                     modifier = Modifier.fillMaxWidth().height(48.dp)
                 ) {
-                    Text("Send Request")
+                    Text("Next: Add Photos")
                 }
             }
             ViewerRole.PROFESSIONAL -> {

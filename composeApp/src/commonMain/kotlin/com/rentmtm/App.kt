@@ -20,6 +20,7 @@ import androidx.navigation.navArgument
 import com.rentmtm.navigation.professionalRegistrationGraph
 import com.rentmtm.navigation.registerUserNavGraph
 import com.rentmtm.ui.account.MyAccountScreen
+import com.rentmtm.ui.budget.BudgetPhotosScreen
 import com.rentmtm.ui.budget.BudgetScreen
 import com.rentmtm.ui.forgotpassword.ForgotPasswordScreen
 import com.rentmtm.ui.home.HomeScreen
@@ -57,6 +58,7 @@ enum class Routes {
     Home,
     RequestServices,
     Budget,
+    BudgetPhotos,
     MyAccount
 }
 
@@ -76,6 +78,7 @@ fun App() {
             ) {
                 val navController = rememberNavController()
                 val registerViewModel = remember { RegisterViewModel() }
+                val budgetViewModel = remember { BudgetViewModel() }
 
                 NavHost(
                     navController = navController,
@@ -125,6 +128,34 @@ fun App() {
                                     // Navega para o grafo que criamos (RegisterUserNavGraph)
                                     navController.navigate(Routes.RegisterUser.name)
                                 }
+                            }
+                        }
+                    )
+                }
+
+                // --- BUDGET SCREEN (PASSO 1: TEXTOS) ---
+                composable(route = Routes.Budget.name) {
+                    BudgetScreen(
+                        viewModel = budgetViewModel,
+                        onBack = { navController.popBackStack() },
+                        onNextToPhotos = {
+                            navController.navigate(Routes.BudgetPhotos.name)
+                        }
+                    )
+                }
+
+                // --- BUDGET PHOTOS SCREEN (PASSO 2: FOTOS) ---
+                composable(route = Routes.BudgetPhotos.name) {
+                    BudgetPhotosScreen(
+                        viewModel = budgetViewModel, // ⬅️ PASSAMOS A MESMA INSTÂNCIA!
+                        onBack = { navController.popBackStack() },
+                        onNext = {
+                            // Este é o momento em que a ação final ocorre.
+                            budgetViewModel.submitBudgetRequest()
+
+                            // Após submeter, podemos limpar o fluxo de orçamento e voltar à Home
+                            navController.navigate(Routes.Home.name) {
+                                popUpTo(Routes.RequestServices.name) { inclusive = true }
                             }
                         }
                     )
@@ -205,19 +236,6 @@ fun App() {
                             // como argumento na rota para pré-preencher o BudgetViewModel.
                             navController.navigate(Routes.Budget.name)
                         }
-                    )
-                }
-
-                // --- BUDGET SCREEN (VISÃO DO CLIENTE) ---
-                composable(route = Routes.Budget.name) {
-                    // Tech Lead Note: Idealmente, o ViewModel deveria ser provido via Koin/Dagger.
-                    // Estamos instanciando manualmente para manter a consistência atual do App.kt
-                    val budgetViewModel = remember { BudgetViewModel() }
-                    // Nota: O BudgetViewModel já é inicializado com ViewerRole.CLIENT por padrão.
-
-                    BudgetScreen(
-                        viewModel = budgetViewModel,
-                        onBack = { navController.popBackStack() }
                     )
                 }
 

@@ -1,0 +1,17 @@
+CREATE TABLE BudgetImage (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    budgetId INTEGER NOT NULL,
+    slotIndex INTEGER NOT NULL, -- Para sabermos exatamente em qual dos 10 cards a foto está
+    imagePath TEXT NOT NULL,
+    FOREIGN KEY (budgetId) REFERENCES Budget(id) ON DELETE CASCADE
+);
+
+insertBudgetImage:
+INSERT OR REPLACE INTO BudgetImage(budgetId, slotIndex, imagePath)
+VALUES (?, ?, ?);
+
+getImagesByBudgetId:
+SELECT * FROM BudgetImage WHERE budgetId = ?;
+
+deleteImagesByBudgetId:
+DELETE FROM BudgetImage WHERE budgetId = ?;

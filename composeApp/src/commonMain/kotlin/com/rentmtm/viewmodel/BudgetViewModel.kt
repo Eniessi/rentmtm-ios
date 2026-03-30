@@ -10,75 +10,99 @@ import kotlinx.coroutines.flow.update
 
 enum class ViewerRole { CLIENT, PROFESSIONAL }
 
+// PURE UI State. No Domain or Database entities here.
 data class BudgetUiState(
     val role: ViewerRole = ViewerRole.CLIENT,
-    val draftBudget: Budget = Budget(
-        customerId = 0L,
-        professionalId = 0L,
-        status = BudgetStatus.PENDING
-    ),
-    // Buffers para evitar conflitos de tipos (Address/Double) na UI
+    val status: BudgetStatus = BudgetStatus.PENDING,
+
+    // UI Fields
+    val serviceTitle: String = "",
+    val serviceDescription: String = "",
+    val serviceLocationInput: String = "",
+    val scheduledDate: String = "",
+    val additionalNotes: String = "",
     val estimatedValueInput: String = "",
-    val serviceLocationInput: String = ""
+    val selectedPaymentMethodId: Long? = null,
+
+    // UI Metadata
+    val isSubmitEnabled: Boolean = false
 )
 
 class BudgetViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(BudgetUiState())
     val uiState: StateFlow<BudgetUiState> = _uiState.asStateFlow()
 
-    // --- Client Actions ---
+    // Professional ID would typically be injected or passed via navigation args
+    private val selectedProfessionalId: Long = 123L
+    private val currentCustomerId: Long = 456L // Logged-in user
+
     fun onServiceTitleChanged(title: String) {
-        _uiState.update { it.copy(draftBudget = it.draftBudget.copy(serviceTitle = title)) }
+        _uiState.update { it.copy(serviceTitle = title) }
+        validateForm()
     }
 
     fun onServiceDescriptionChanged(description: String) {
-        _uiState.update { it.copy(draftBudget = it.draftBudget.copy(serviceDescription = description)) }
+        _uiState.update { it.copy(serviceDescription = description) }
+        validateForm()
     }
 
     fun onServiceLocationChanged(location: String) {
-        // Atualizamos o buffer de String.
-        // A conversão para o objeto Address acontecerá na persistência.
         _uiState.update { it.copy(serviceLocationInput = location) }
+        validateForm()
     }
 
     fun onScheduledDateChanged(date: String) {
-        _uiState.update { it.copy(draftBudget = it.draftBudget.copy(scheduledDate = date)) }
+        _uiState.update { it.copy(scheduledDate = date) }
     }
 
-    fun submitBudgetRequest() {
-        println("Tech Lead Log -> Persisting budget to database with status PENDING")
-        // Aqui chamaremos o SQLDelight no futuro
+    fun onPaymentMethodSelected(methodId: Long) {
+        _uiState.update { it.copy(selectedPaymentMethodId = methodId) }
     }
 
     // --- Professional Actions ---
     fun onAdditionalNotesChanged(notes: String) {
-        _uiState.update { it.copy(draftBudget = it.draftBudget.copy(additionalNotes = notes)) }
+        _uiState.update { it.copy(additionalNotes = notes) }
     }
 
     fun onQuoteValueChanged(text: String) {
-        // Validação para aceitar apenas números e um ponto
         if (text.isEmpty() || text.matches(Regex("^\\d*\\.?\\d*$"))) {
-            val doubleValue = text.toDoubleOrNull() ?: 0.0
-            _uiState.update {
-                it.copy(
-                    estimatedValueInput = text,
-                    draftBudget = it.draftBudget.copy(estimatedValue = doubleValue)
-                )
-            }
+            _uiState.update { it.copy(estimatedValueInput = text) }
         }
+    }
+
+    private fun validateForm() {
+        val isValid = uiState.value.serviceTitle.isNotBlank() &&
+                uiState.value.serviceDescription.isNotBlank() &&
+                uiState.value.serviceLocationInput.isNotBlank()
+        _uiState.update { it.copy(isSubmitEnabled = isValid) }
+    }
+
+    fun submitBudgetRequest() {
+        val currentState = uiState.value
+
+        // Explicit mapping from UI State to Domain Entity
+        val newBudget = Budget(
+            customerId = currentCustomerId,
+            professionalId = selectedProfessionalId,
+            serviceTitle = currentState.serviceTitle,
+            serviceDescription = currentState.serviceDescription,
+            serviceLocation = null, // TODO: Implement Geocoding API to convert String to Address
+            scheduledDate = currentState.scheduledDate,
+            paymentMethodId = currentState.selectedPaymentMethodId,
+            status = BudgetStatus.PENDING
+        )
+
+        println("Tech Lead Log -> Mapped to entity: $newBudget")
+        println("Tech Lead Log -> Persisting budget to database with status PENDING")
     }
 
     fun sendQuote() {
-        _uiState.update {
-            it.copy(draftBudget = it.draftBudget.copy(status = BudgetStatus.NEGOTIATING))
-        }
-        println("Tech Lead Log -> Budget updated to NEGOTIATING status")
+        _uiState.update { it.copy(status = BudgetStatus.NEGOTIATING) }
+        println("Tech Lead Log -> Budget updated to NEGOTIATING with value: ${uiState.value.estimatedValueInput}")
     }
 
     fun acceptBudget() {
-        _uiState.update {
-            it.copy(draftBudget = it.draftBudget.copy(status = BudgetStatus.ACCEPTED))
-        }
-        println("Tech Lead Log -> Budget ACCEPTED by client")
+        _uiState.update { it.copy(status = BudgetStatus.ACCEPTED) }
+        println("Tech Lead Log -> Budget ACCEPTED")
     }
 }

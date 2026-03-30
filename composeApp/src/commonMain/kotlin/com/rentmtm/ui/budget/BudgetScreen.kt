@@ -8,9 +8,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
-import com.rentmtm.model.Budget
+import androidx.compose.ui.unit.dp
 import com.rentmtm.model.enums.BudgetStatus
 import com.rentmtm.ui.components.MtmTextArea
 import com.rentmtm.ui.components.MtmTextField
@@ -31,148 +30,154 @@ fun BudgetScreen(
         onServiceDescriptionChange = viewModel::onServiceDescriptionChanged,
         onServiceLocationChange = viewModel::onServiceLocationChanged,
         onScheduledDateChange = viewModel::onScheduledDateChanged,
+        onPaymentMethodChange = viewModel::onPaymentMethodSelected,
         onAdditionalNotesChange = viewModel::onAdditionalNotesChanged,
         onQuoteValueChange = viewModel::onQuoteValueChanged,
         onSubmitRequest = viewModel::submitBudgetRequest,
-        onSendQuote = viewModel::sendQuote,
-        onAcceptBudget = viewModel::acceptBudget,
-        onBack = onBack
+        onSendQuote = viewModel::sendQuote
     )
 }
 
 @Composable
 fun BudgetContent(
     state: BudgetUiState,
-    onServiceTitleChange: (String) -> Unit,
-    onServiceDescriptionChange: (String) -> Unit,
-    onServiceLocationChange: (String) -> Unit,
-    onScheduledDateChange: (String) -> Unit,
-    onAdditionalNotesChange: (String) -> Unit,
-    onQuoteValueChange: (String) -> Unit,
-    onSubmitRequest: () -> Unit,
-    onSendQuote: () -> Unit,
-    onAcceptBudget: () -> Unit,
-    onBack: () -> Unit
+    onServiceTitleChange: (String) -> Unit = {},
+    onServiceDescriptionChange: (String) -> Unit = {},
+    onServiceLocationChange: (String) -> Unit = {},
+    onScheduledDateChange: (String) -> Unit = {},
+    onPaymentMethodChange: (Long) -> Unit = {},
+    onAdditionalNotesChange: (String) -> Unit = {},
+    onQuoteValueChange: (String) -> Unit = {},
+    onSubmitRequest: () -> Unit = {},
+    onSendQuote: () -> Unit = {}
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .systemBarsPadding()
-    ) {
-        Text(
-            text = if (state.role == ViewerRole.CLIENT) "Request a Service" else "Service Request",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(24.dp)
-        )
-
+    Scaffold(
+        modifier = Modifier.fillMaxSize().systemBarsPadding(),
+        topBar = {
+            Text(
+                text = if (state.role == ViewerRole.CLIENT) "Request Service" else "Service Quote",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(24.dp)
+            )
+        },
+        bottomBar = {
+            BudgetBottomActions(
+                state = state,
+                onSubmitRequest = onSubmitRequest,
+                onSendQuote = onSendQuote
+            )
+        }
+    ) { innerPadding ->
         Column(
             modifier = Modifier
-                .weight(1f)
+                .padding(innerPadding)
+                .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
         ) {
             when (state.role) {
-                ViewerRole.CLIENT -> ClientView(
-                    state = state,
-                    onServiceTitleChange = onServiceTitleChange,
-                    onServiceDescriptionChange = onServiceDescriptionChange,
-                    onServiceLocationChange = onServiceLocationChange,
-                    onScheduledDateChange = onScheduledDateChange,
-                    onSubmitRequest = onSubmitRequest,
-                    onAcceptBudget = onAcceptBudget
-                )
-                ViewerRole.PROFESSIONAL -> ProfessionalView(
-                    state = state,
-                    onAdditionalNotesChange = onAdditionalNotesChange,
-                    onQuoteValueChange = onQuoteValueChange,
-                    onSendQuote = onSendQuote
-                )
+                ViewerRole.CLIENT -> {
+                    ClientDraftingView(
+                        state = state,
+                        onServiceTitleChange = onServiceTitleChange,
+                        onServiceDescriptionChange = onServiceDescriptionChange,
+                        onServiceLocationChange = onServiceLocationChange,
+                        onScheduledDateChange = onScheduledDateChange,
+                        onPaymentMethodChange = onPaymentMethodChange
+                    )
+                }
+                ViewerRole.PROFESSIONAL -> {
+                    ProfessionalRespondingView(
+                        state = state,
+                        onAdditionalNotesChange = onAdditionalNotesChange,
+                        onQuoteValueChange = onQuoteValueChange
+                    )
+                }
             }
         }
     }
 }
 
+// -------------------------------------------------------------
+// Private UI Components
+// -------------------------------------------------------------
+
 @Composable
-private fun ClientView(
+private fun ClientDraftingView(
     state: BudgetUiState,
     onServiceTitleChange: (String) -> Unit,
     onServiceDescriptionChange: (String) -> Unit,
     onServiceLocationChange: (String) -> Unit,
     onScheduledDateChange: (String) -> Unit,
-    onSubmitRequest: () -> Unit,
-    onAcceptBudget: () -> Unit
+    onPaymentMethodChange: (Long) -> Unit
 ) {
-    val budget = state.draftBudget
+    MtmTextField(
+        label = "What do you need?",
+        value = state.serviceTitle,
+        onValueChange = onServiceTitleChange,
+        placeholder = "E.g.: Shower wiring replacement",
+        modifier = Modifier.fillMaxWidth()
+    )
+    Spacer(modifier = Modifier.height(16.dp))
+    MtmTextArea(
+        label = "Problem Details",
+        value = state.serviceDescription,
+        onValueChange = onServiceDescriptionChange,
+        placeholder = "Explain the context, equipment brands, etc.",
+        modifier = Modifier.fillMaxWidth()
+    )
+    Spacer(modifier = Modifier.height(16.dp))
+    MtmTextField(
+        label = "Where will the service be?",
+        value = state.serviceLocationInput,
+        onValueChange = onServiceLocationChange,
+        placeholder = "Street, Neighborhood, City",
+        modifier = Modifier.fillMaxWidth()
+    )
+    Spacer(modifier = Modifier.height(16.dp))
+    MtmTextField(
+        label = "Desired Date",
+        value = state.scheduledDate,
+        onValueChange = onScheduledDateChange,
+        placeholder = "MM/DD/YYYY or 'As soon as possible'",
+        modifier = Modifier.fillMaxWidth()
+    )
+    Spacer(modifier = Modifier.height(16.dp))
 
-    if (budget.status == BudgetStatus.PENDING && (budget.estimatedValue == null || budget.estimatedValue == 0.0)) {
-        MtmTextField(
-            label = "Service Title",
-            value = budget.serviceTitle ?: "",
-            onValueChange = onServiceTitleChange,
-            placeholder = "E.g., Electrical Repair",
-            modifier = Modifier.fillMaxWidth()
+    Text("Preferred Payment Method", style = MaterialTheme.typography.labelLarge)
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
+        // The color change happens because of the 'selected' boolean expression below
+        FilterChip(
+            selected = state.selectedPaymentMethodId == 1L,
+            onClick = { onPaymentMethodChange(1L) },
+            label = { Text("Credit Card") }
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        MtmTextArea(
-            label = "Service Description",
-            value = budget.serviceDescription ?: "",
-            onValueChange = onServiceDescriptionChange,
-            placeholder = "Describe the problem...",
-            modifier = Modifier.fillMaxWidth()
+        FilterChip(
+            selected = state.selectedPaymentMethodId == 3L,
+            onClick = { onPaymentMethodChange(3L) },
+            label = { Text("Cash") }
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        MtmTextField(
-            label = "Service Location",
-            value = state.serviceLocationInput,
-            onValueChange = onServiceLocationChange,
-            placeholder = "Address or Neighborhood",
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        MtmTextField(
-            label = "Scheduled Date",
-            value = budget.scheduledDate ?: "",
-            onValueChange = onScheduledDateChange,
-            placeholder = "YYYY-MM-DD",
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-        Button(onClick = onSubmitRequest, modifier = Modifier.fillMaxWidth().height(48.dp)) {
-            Text("Find Professionals")
-        }
-    }
-    else if (budget.status == BudgetStatus.NEGOTIATING) {
-        Text("Professional Notes:", fontWeight = FontWeight.Bold)
-        Text(budget.additionalNotes ?: "No specific notes provided.", color = Color.Gray)
-        Spacer(modifier = Modifier.height(24.dp))
-        Text("Quoted Price: $${budget.estimatedValue}", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
-        Spacer(modifier = Modifier.height(32.dp))
-        Button(onClick = onAcceptBudget, modifier = Modifier.fillMaxWidth().height(48.dp)) {
-            Text("Accept and Hire Now")
-        }
     }
 }
 
 @Composable
-private fun ProfessionalView(
+private fun ProfessionalRespondingView(
     state: BudgetUiState,
     onAdditionalNotesChange: (String) -> Unit,
-    onQuoteValueChange: (String) -> Unit,
-    onSendQuote: () -> Unit
+    onQuoteValueChange: (String) -> Unit
 ) {
-    val budget = state.draftBudget
-    Text("Client Request: ${budget.serviceTitle ?: ""}", fontWeight = FontWeight.Bold)
-    Text(budget.serviceDescription ?: "", modifier = Modifier.padding(vertical = 8.dp))
+    Text("Client Request: ${state.serviceTitle}", fontWeight = FontWeight.Bold)
+    Text(state.serviceDescription, modifier = Modifier.padding(vertical = 8.dp))
     Text("Location: ${state.serviceLocationInput}", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
-    Text("Requested Date: ${budget.scheduledDate ?: "Flexible"}", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+    Text("Requested Date: ${state.scheduledDate.ifBlank { "Flexible" }}", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
 
     HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
     MtmTextArea(
-        label = "Response / Doubts (Optional)",
-        value = budget.additionalNotes ?: "",
+        label = "Your Conditions / Required Materials",
+        value = state.additionalNotes,
         onValueChange = onAdditionalNotesChange,
-        placeholder = "Ask for more details or set your conditions...",
+        placeholder = "E.g.: I will need you to buy XYZ parts before my arrival...",
         modifier = Modifier.fillMaxWidth()
     )
     Spacer(modifier = Modifier.height(16.dp))
@@ -183,9 +188,39 @@ private fun ProfessionalView(
         placeholder = "0.00",
         modifier = Modifier.fillMaxWidth()
     )
-    Spacer(modifier = Modifier.height(32.dp))
-    Button(onClick = onSendQuote, modifier = Modifier.fillMaxWidth().height(48.dp)) {
-        Text("Send Quote to Client")
+}
+
+@Composable
+private fun BudgetBottomActions(
+    state: BudgetUiState,
+    onSubmitRequest: () -> Unit,
+    onSendQuote: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(24.dp)
+    ) {
+        when (state.role) {
+            ViewerRole.CLIENT -> {
+                Button(
+                    onClick = onSubmitRequest,
+                    enabled = state.isSubmitEnabled,
+                    modifier = Modifier.fillMaxWidth().height(48.dp)
+                ) {
+                    Text("Send Request")
+                }
+            }
+            ViewerRole.PROFESSIONAL -> {
+                Button(
+                    onClick = onSendQuote,
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    enabled = state.estimatedValueInput.isNotBlank()
+                ) {
+                    Text("Send Quote")
+                }
+            }
+        }
     }
 }
 
@@ -193,47 +228,37 @@ private fun ProfessionalView(
 // PREVIEWS
 // ==========================================
 
-@Preview(showBackground = true, name = "Client View - Drafting")
+@Preview(showBackground = true)
 @Composable
-fun PreviewClientDrafting() {
-    val state = BudgetUiState(
-        role = ViewerRole.CLIENT,
-        draftBudget = Budget(customerId = 1, professionalId = 2, status = BudgetStatus.PENDING)
-    )
-    MaterialTheme { BudgetContent(state, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}) }
+fun Preview_01_Client_Creating_Request() {
+    MaterialTheme {
+        BudgetContent(
+            state = BudgetUiState(
+                role = ViewerRole.CLIENT,
+                status = BudgetStatus.PENDING,
+                serviceTitle = "Kitchen Pipe Leak",
+                serviceDescription = "Water is dripping under the sink cabinet.",
+                serviceLocationInput = "Independence Avenue, 1000",
+                selectedPaymentMethodId = 1L,
+                isSubmitEnabled = true
+            )
+        )
+    }
 }
 
-@Preview(showBackground = true, name = "Professional View - Responding")
+@Preview(showBackground = true)
 @Composable
-fun PreviewProfessionalResponding() {
-    val state = BudgetUiState(
-        role = ViewerRole.PROFESSIONAL,
-        serviceLocationInput = "Downtown, New York",
-        draftBudget = Budget(
-            customerId = 1,
-            professionalId = 2,
-            serviceTitle = "Kitchen Pipe Leak",
-            serviceDescription = "Water is dripping under the sink, might need a pipe replacement.",
-            scheduledDate = "2026-05-20",
-            status = BudgetStatus.PENDING
+fun Preview_02_Professional_Responding() {
+    MaterialTheme {
+        BudgetContent(
+            state = BudgetUiState(
+                role = ViewerRole.PROFESSIONAL,
+                status = BudgetStatus.PENDING,
+                serviceTitle = "Kitchen Pipe Leak",
+                serviceDescription = "Water is dripping under the sink cabinet.",
+                serviceLocationInput = "Independence Avenue, 1000",
+                scheduledDate = "Tomorrow morning"
+            )
         )
-    )
-    MaterialTheme { BudgetContent(state, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}) }
-}
-
-@Preview(showBackground = true, name = "Client View - Negotiating")
-@Composable
-fun PreviewClientNegotiating() {
-    val state = BudgetUiState(
-        role = ViewerRole.CLIENT,
-        draftBudget = Budget(
-            customerId = 1,
-            professionalId = 2,
-            serviceTitle = "Kitchen Pipe Leak",
-            estimatedValue = 120.0,
-            additionalNotes = "I can be there at 10 AM. I'll need to buy a new U-joint.",
-            status = BudgetStatus.NEGOTIATING
-        )
-    )
-    MaterialTheme { BudgetContent(state, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}) }
+    }
 }

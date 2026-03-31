@@ -7,6 +7,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,6 +29,8 @@ import com.rentmtm.ui.login.LoginScreen
 import com.rentmtm.ui.newpassword.NewPasswordScreen
 import com.rentmtm.ui.profile.ProfileFlow
 import com.rentmtm.ui.request.RequestServiceFlow
+import com.rentmtm.ui.search.FindProfessionalsScreen
+import com.rentmtm.ui.serviceorder.ServiceOrderScreen
 import com.rentmtm.viewmodel.*
 import com.rentmtm.ui.signup.SignUpScreen
 import com.rentmtm.ui.webview.WebBrowserScreen
@@ -59,7 +62,9 @@ enum class Routes {
     RequestServices,
     Budget,
     BudgetPhotos,
-    MyAccount
+    MyAccount,
+    FindProfessionals,
+    ServiceOrder
 }
 
 @Composable
@@ -79,6 +84,8 @@ fun App() {
                 val navController = rememberNavController()
                 val registerViewModel = remember { RegisterViewModel() }
                 val budgetViewModel = remember { BudgetViewModel() }
+                val searchViewModel = remember { SearchProfessionalsViewModel() }
+                val serviceOrderViewModel = remember { ServiceOrderViewModel() }
 
                 NavHost(
                     navController = navController,
@@ -133,6 +140,25 @@ fun App() {
                     )
                 }
 
+                // --- SERVICE ORDER SCREEN ---
+                // Esta rota recebe um budgetId para carregar os dados corretos
+                composable(
+                    route = "${Routes.ServiceOrder.name}/{budgetId}",
+                    arguments = listOf(navArgument("budgetId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val budgetId = backStackEntry.arguments?.getLong("budgetId") ?: 0L
+
+                    // Carrega os dados do orçamento para a OS antes de exibir a tela
+                    LaunchedEffect(budgetId) {
+                        serviceOrderViewModel.loadOrderFromBudget(budgetId)
+                    }
+
+                    ServiceOrderScreen(
+                        viewModel = serviceOrderViewModel,
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+
                 // --- BUDGET SCREEN (PASSO 1: TEXTOS) ---
                 composable(route = Routes.Budget.name) {
                     BudgetScreen(
@@ -147,15 +173,36 @@ fun App() {
                 // --- BUDGET PHOTOS SCREEN (PASSO 2: FOTOS) ---
                 composable(route = Routes.BudgetPhotos.name) {
                     BudgetPhotosScreen(
-                        viewModel = budgetViewModel, // ⬅️ PASSAMOS A MESMA INSTÂNCIA!
+                        viewModel = budgetViewModel, //
                         onBack = { navController.popBackStack() },
                         onNext = {
-                            // Este é o momento em que a ação final ocorre.
                             budgetViewModel.submitBudgetRequest()
 
-                            // Após submeter, podemos limpar o fluxo de orçamento e voltar à Home
-                            navController.navigate(Routes.Home.name) {
-                                popUpTo(Routes.RequestServices.name) { inclusive = true }
+                            // Tech Lead Note: Em produção, pegue o ID real retornado pela persistência.
+                            val generatedBudgetId = 999L
+
+                            // Navega para a busca de profissionais levando o ID do orçamento
+                            navController.navigate("${Routes.FindProfessionals.name}/$generatedBudgetId")
+                        }
+                    )
+                }
+
+                // --- STEP 3: FIND PROFESSIONALS (RADAR) -> SERVICE ORDER ---
+                composable(
+                    route = "${Routes.FindProfessionals.name}/{budgetId}",
+                    arguments = listOf(navArgument("budgetId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val budgetId = backStackEntry.arguments?.getLong("budgetId") ?: 0L
+
+                    FindProfessionalsScreen(
+                        viewModel = searchViewModel, //
+                        onBack = { navController.popBackStack() },
+                        onProfessionalSelected = { professionalId ->
+                            // Ao escolher o profissional, navegamos para gerar a OS
+                            // O ideal aqui seria uma chamada de API para vincular o prof ao budget
+                            navController.navigate("${Routes.ServiceOrder.name}/$budgetId") {
+                                // Limpa a tela de busca da pilha para o usuário não voltar ao radar
+                                popUpTo(Routes.FindProfessionals.name) { inclusive = true }
                             }
                         }
                     )
@@ -234,6 +281,29 @@ fun App() {
                         onNavigateToBudget = { selectedProfession ->
                             // Você pode registrar no BudgetViewModel o selectedProfession aqui antes de navegar
                             navController.navigate(Routes.Budget.name)
+                        }
+                    )
+                }
+
+                // --- STEP 4: SERVICE ORDER (TELA FINAL) ---
+                composable(
+                    route = "${Routes.ServiceOrder.name}/{budgetId}",
+                    arguments = listOf(navArgument("budgetId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val budgetId = backStackEntry.arguments?.getLong("budgetId") ?: 0L
+
+                    // Dispara o carregamento dos dados da OS baseada no budget aprovado
+                    LaunchedEffect(budgetId) {
+                        serviceOrderViewModel.loadOrderFromBudget(budgetId)
+                    }
+
+                    ServiceOrderScreen(
+                        viewModel = serviceOrderViewModel,
+                        onBack = {
+                            // Volta para a Home, pois a OS já é um documento oficial
+                            navController.navigate(Routes.Home.name) {
+                                popUpTo(0)
+                            }
                         }
                     )
                 }

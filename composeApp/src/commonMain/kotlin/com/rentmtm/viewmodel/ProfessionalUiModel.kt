@@ -7,7 +7,8 @@ data class ProfessionalUiModel(
     val professionTitle: String,
     val distanceKm: Double,
     val rating: Double,
-    val totalJobs: Int
+    val totalJobs: Int,
+    val quoteValue: Double? = null
 )
 
 // The State Machine

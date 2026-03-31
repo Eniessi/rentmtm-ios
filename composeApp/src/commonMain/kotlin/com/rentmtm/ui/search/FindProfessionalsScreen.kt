@@ -19,8 +19,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.rentmtm.viewmodel.ProfessionalSearchUiState
 import com.rentmtm.viewmodel.ProfessionalUiModel
 import com.rentmtm.viewmodel.SearchProfessionalsViewModel
@@ -29,11 +31,10 @@ import com.rentmtm.viewmodel.SearchProfessionalsViewModel
 fun FindProfessionalsScreen(
     viewModel: SearchProfessionalsViewModel,
     onBack: () -> Unit,
-    onProfessionalSelected: (Long) -> Unit // Navigates to send budget
+    onProfessionalSelected: (Long) -> Unit // Este é o nosso "Accept" que gera a Ordem de Serviço
 ) {
     val state by viewModel.uiState.collectAsState()
 
-    // Kickoff the search automatically when the screen enters the Idle state
     LaunchedEffect(state) {
         if (state is ProfessionalSearchUiState.Idle) {
             viewModel.startSearchForService("Electrician")
@@ -41,16 +42,13 @@ fun FindProfessionalsScreen(
     }
 
     Scaffold(
-        topBar = {
-            // Optional TopBar
-        }
+        topBar = { /* Optional TopBar */ }
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Crossfade applies a smooth alpha transition between UI states
             Crossfade(targetState = state, label = "SearchStateTransition") { currentState ->
                 when (currentState) {
                     is ProfessionalSearchUiState.Idle,
@@ -58,9 +56,20 @@ fun FindProfessionalsScreen(
                         SearchingView()
                     }
                     is ProfessionalSearchUiState.Success -> {
+                        // CORREÇÃO: Repassando os 3 eventos necessários
                         ResultsView(
                             professionals = currentState.professionals,
-                            onSelect = onProfessionalSelected
+                            onAccept = { professionalId ->
+                                onProfessionalSelected(professionalId)
+                            },
+                            onDecline = { professionalId ->
+                                // TODO: Chamar o ViewModel para remover este prof da lista
+                                println("Tech Lead Log -> Cliente recusou o profissional $professionalId")
+                            },
+                            onAsk = { professionalId ->
+                                // TODO: Navegar para tela de Chat
+                                println("Tech Lead Log -> Cliente quer tirar dúvidas com o profissional $professionalId")
+                            }
                         )
                     }
                     is ProfessionalSearchUiState.Empty -> {
@@ -78,6 +87,7 @@ fun FindProfessionalsScreen(
 // -------------------------------------------------------------
 // Component 1: The Radar Animation View
 // -------------------------------------------------------------
+
 @Composable
 private fun SearchingView() {
     Column(
@@ -86,19 +96,19 @@ private fun SearchingView() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         RadarAnimation(modifier = Modifier.size(250.dp))
-
         Spacer(modifier = Modifier.height(32.dp))
-
         Text(
-            text = "Locating nearby professionals...",
+            text = "Waiting for professionals...",
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.Bold
         )
         Text(
-            text = "This might take a few seconds",
+            text = "We'll notify you as soon as a professional accepts your request.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 8.dp)
+            textAlign = TextAlign.Center,
+            // CORREÇÃO: Encadear modificadores é a melhor prática no Compose
+            modifier = Modifier.padding(horizontal = 40.dp).padding(top = 8.dp)
         )
     }
 }
@@ -170,7 +180,9 @@ private fun RadarAnimation(modifier: Modifier = Modifier) {
 @Composable
 private fun ResultsView(
     professionals: List<ProfessionalUiModel>,
-    onSelect: (Long) -> Unit
+    onAccept: (Long) -> Unit,
+    onDecline: (Long) -> Unit,
+    onAsk: (Long) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         Text(
@@ -186,7 +198,12 @@ private fun ResultsView(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             items(professionals) { profile ->
-                ProfessionalCard(profile = profile, onClick = { onSelect(profile.id) })
+                ProfessionalCard(
+                    profile = profile,
+                    onAccept = { onAccept(profile.id) },
+                    onDecline = { onDecline(profile.id) },
+                    onAsk = { onAsk(profile.id) }
+                )
             }
         }
     }
@@ -195,46 +212,60 @@ private fun ResultsView(
 @Composable
 private fun ProfessionalCard(
     profile: ProfessionalUiModel,
-    onClick: () -> Unit
+    onAccept: () -> Unit,
+    onDecline: () -> Unit,
+    onAsk: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        onClick = onClick
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Fake Avatar placeholder
-            Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = profile.name.take(1),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    style = MaterialTheme.typography.titleLarge
-                )
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Avatar Placeholder
+                Box(modifier = Modifier.size(50.dp).background(MaterialTheme.colorScheme.primaryContainer, CircleShape), contentAlignment = Alignment.Center) {
+                    Text(profile.name.take(1))
+                }
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = profile.name, fontWeight = FontWeight.Bold)
+                    Text(text = "Quote: $${profile.quoteValue}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.ExtraBold)
+                }
             }
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = profile.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                Text(text = profile.professionTitle, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.Star, contentDescription = "Rating", tint = Color(0xFFFFB300), modifier = Modifier.size(16.dp))
-                    Text(text = " ${profile.rating} (${profile.totalJobs} jobs)", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(end = 8.dp))
-                    Text(text = "• ${profile.distanceKm} km away", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            // Botões de Ação com padrão de cores solicitado
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // QUESTION (Azul Claro/Secundário)
+                Button(
+                    onClick = onAsk,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Text("Ask a Question", fontSize = 12.sp)
                 }
+
+                // ACCEPT (Azul Escuro/Primário)
+                Button(
+                    onClick = onAccept,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Text("Accept Quote", fontSize = 12.sp)
+                }
+            }
+
+            // DECLINE (Vermelho/Error)
+            TextButton(
+                onClick = onDecline,
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text("Decline Request", fontWeight = FontWeight.Medium)
             }
         }
     }
@@ -257,27 +288,34 @@ private fun EmptyResultView(onRetry: () -> Unit) {
 // ==========================================
 // PREVIEWS
 // ==========================================
-@Preview(showBackground = true)
+@Preview
 @Composable
-fun PreviewSearchingState() {
+fun PreviewSearchingView() {
     MaterialTheme {
-        Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        Surface {
+            // Nota: Se a RadarAnimation depender de contexto complexo,
+            // podes ter de a substituir por um Box simples no Preview.
             SearchingView()
         }
     }
 }
 
-@Preview(showBackground = true)
+@Preview
 @Composable
-fun PreviewSuccessState() {
-    val mockData = listOf(
-        ProfessionalUiModel(1, "Carlos Silva", "Master Electrician", 1.2, 4.9, 142),
-        ProfessionalUiModel(2, "Ana Souza", "Residential Electrician", 3.5, 4.7, 89),
-        ProfessionalUiModel(3, "Marcos Paulo", "Wiring Specialist", 5.0, 4.8, 210)
-    )
+fun PreviewResultsView() {
     MaterialTheme {
-        Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-            ResultsView(professionals = mockData, onSelect = {})
+        Surface {
+            val mockList = listOf(
+                ProfessionalUiModel(1L, "John Doe", "Electrician", 2.5, 4.9, 150, 120.00),
+                ProfessionalUiModel(2L, "Jane Smith", "Wiring Specialist", 5.1, 4.7, 89, 110.00)
+            )
+
+            ResultsView(
+                professionals = mockList,
+                onAccept = {},
+                onDecline = {},
+                onAsk = {}
+            )
         }
     }
 }

@@ -68,7 +68,8 @@ fun HomeScreen(
     // 1. NOVO PARÂMETRO: Função para abrir a webview (recebe URL e Título)
     onNavigateToWeb: (String, String) -> Unit,
     onNavigateToRequestServices: () -> Unit,
-    onNavigateToMyAccount: () -> Unit
+    onNavigateToMyAccount: () -> Unit,
+    onNavigateToSupportChat: () -> Unit
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -188,7 +189,8 @@ fun HomeScreen(
                             scope.launch { drawerState.close() }
                             when (option) {
                                 "Request Services" -> onNavigateToRequestServices() // ⬅️ DELEGAÇÃO DA NAVEGAÇÃO
-                                "Lilo Virtual Assistent" -> showFab = false
+                                "Lilo Virtual Assistent", "Talk to us" -> onNavigateToSupportChat()
+                                "Work With Us" -> showFab = false
                                 else -> showFab = true
                             }
                         },
@@ -250,9 +252,8 @@ fun HomeScreen(
             floatingActionButton = {
                 if (showFab) {
                     Box(modifier = Modifier.size(80.dp)) {
-
                         FloatingActionButton(
-                            onClick = { /* TODO: Abrir o chat da Lilo */ },
+                            onClick = { onNavigateToSupportChat() }, // ⬅️ LIGA A ROTA AQUI TAMBÉM
                             containerColor = Color.Transparent,
                             elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
                             modifier = Modifier.align(Alignment.BottomStart)
@@ -314,7 +315,8 @@ fun HomeScreenPreview() {
             onLogout = {},
             onNavigateToWeb = { _, _ -> }, // Preview falso
             onNavigateToRequestServices = {},
-            onNavigateToMyAccount = {}
+            onNavigateToMyAccount = {},
+            onNavigateToSupportChat = {}
         )
     }
 }

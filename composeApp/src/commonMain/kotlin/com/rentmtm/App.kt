@@ -24,6 +24,7 @@ import com.rentmtm.ui.account.MyAccountScreen
 import com.rentmtm.ui.budget.BudgetPhotosScreen
 import com.rentmtm.ui.budget.BudgetScreen
 import com.rentmtm.ui.chat.ChatScreen
+import com.rentmtm.ui.chat.SupportChatScreen
 import com.rentmtm.ui.forgotpassword.ForgotPasswordScreen
 import com.rentmtm.ui.home.HomeScreen
 import com.rentmtm.ui.login.LoginScreen
@@ -65,10 +66,9 @@ enum class Routes {
     BudgetPhotos,
     MyAccount,
     FindProfessionals,
-
     ChatP2P,
-
-    ServiceOrder
+    ServiceOrder,
+    SupportChat
 }
 
 @Composable
@@ -91,6 +91,7 @@ fun App() {
                 val searchViewModel = remember { SearchProfessionalsViewModel() }
                 val serviceOrderViewModel = remember { ServiceOrderViewModel() }
                 val chatViewModel = remember { ChatViewModel() }
+                val supportChatViewModel = remember { SupportChatViewModel() }
 
                 NavHost(
                     navController = navController,
@@ -282,7 +283,17 @@ fun App() {
                         },
                         onNavigateToMyAccount = { // ⬅️ LIGANDO A NAVEGAÇÃO
                             navController.navigate(Routes.MyAccount.name)
+                        },
+                        onNavigateToSupportChat = {
+                            navController.navigate(Routes.SupportChat.name)
                         }
+                    )
+                }
+
+                composable(route = Routes.SupportChat.name) {
+                    SupportChatScreen(
+                        viewModel = supportChatViewModel,
+                        onBack = { navController.popBackStack() }
                     )
                 }
 

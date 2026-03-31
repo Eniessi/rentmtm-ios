@@ -23,6 +23,7 @@ import com.rentmtm.navigation.registerUserNavGraph
 import com.rentmtm.ui.account.MyAccountScreen
 import com.rentmtm.ui.budget.BudgetPhotosScreen
 import com.rentmtm.ui.budget.BudgetScreen
+import com.rentmtm.ui.chat.ChatScreen
 import com.rentmtm.ui.forgotpassword.ForgotPasswordScreen
 import com.rentmtm.ui.home.HomeScreen
 import com.rentmtm.ui.login.LoginScreen
@@ -64,6 +65,9 @@ enum class Routes {
     BudgetPhotos,
     MyAccount,
     FindProfessionals,
+
+    ChatP2P,
+
     ServiceOrder
 }
 
@@ -86,6 +90,7 @@ fun App() {
                 val budgetViewModel = remember { BudgetViewModel() }
                 val searchViewModel = remember { SearchProfessionalsViewModel() }
                 val serviceOrderViewModel = remember { ServiceOrderViewModel() }
+                val chatViewModel = remember { ChatViewModel() }
 
                 NavHost(
                     navController = navController,
@@ -140,6 +145,21 @@ fun App() {
                     )
                 }
 
+                composable(
+                    route = "${Routes.ChatP2P.name}/{serviceId}",
+                    arguments = listOf(navArgument("serviceId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val serviceId = backStackEntry.arguments?.getLong("serviceId") ?: 0L
+
+                    // Tech Lead Note: Num cenário real, o chatViewModel chamaria algo como:
+                    // LaunchedEffect(serviceId) { chatViewModel.loadChatHistory(serviceId) }
+
+                    ChatScreen(
+                        viewModel = chatViewModel,
+                        onBack = { navController.popBackStack() } // Volta para a Ordem de Serviço
+                    )
+                }
+
                 // --- SERVICE ORDER SCREEN ---
                 // Esta rota recebe um budgetId para carregar os dados corretos
                 composable(
@@ -155,7 +175,8 @@ fun App() {
 
                     ServiceOrderScreen(
                         viewModel = serviceOrderViewModel,
-                        onBack = { navController.popBackStack() }
+                        onBack = { navController.popBackStack() },
+                        onOpenChat = { navController.navigate(Routes.ChatP2P.name)}
                     )
                 }
 
@@ -292,7 +313,6 @@ fun App() {
                 ) { backStackEntry ->
                     val budgetId = backStackEntry.arguments?.getLong("budgetId") ?: 0L
 
-                    // Dispara o carregamento dos dados da OS baseada no budget aprovado
                     LaunchedEffect(budgetId) {
                         serviceOrderViewModel.loadOrderFromBudget(budgetId)
                     }
@@ -300,10 +320,13 @@ fun App() {
                     ServiceOrderScreen(
                         viewModel = serviceOrderViewModel,
                         onBack = {
-                            // Volta para a Home, pois a OS já é um documento oficial
                             navController.navigate(Routes.Home.name) {
                                 popUpTo(0)
                             }
+                        },
+                        onOpenChat = { // ⬅️ Gatilho para abrir a tela de chat
+                            // Passamos o budgetId ou serviceOrderId para o chat carregar o contexto correto
+                            navController.navigate("${Routes.ChatP2P.name}/$budgetId")
                         }
                     )
                 }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,7 +27,8 @@ import com.rentmtm.viewmodel.ViewerRole
 @Composable
 fun ServiceOrderScreen(
     viewModel: ServiceOrderViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onOpenChat: () -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -40,6 +42,12 @@ fun ServiceOrderScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    // ⬅️ BOTÃO DE CHAT NO CABEÇALHO
+                    IconButton(onClick = onOpenChat) {
+                        Icon(Icons.AutoMirrored.Filled.Message, contentDescription = "Open Chat")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)

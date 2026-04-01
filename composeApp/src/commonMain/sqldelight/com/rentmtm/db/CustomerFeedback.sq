@@ -1,0 +1,22 @@
+CREATE TABLE CustomerFeedback (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    serviceOrderId INTEGER NOT NULL UNIQUE, -- Uma OS só pode ter uma avaliação
+    customerId INTEGER NOT NULL,
+    professionalId INTEGER NOT NULL,
+    rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5), -- Validação ao nível da BD
+    comments TEXT,
+    createdAt TEXT NOT NULL,
+    FOREIGN KEY (serviceOrderId) REFERENCES ServiceOrder(id) ON DELETE CASCADE,
+    FOREIGN KEY (customerId) REFERENCES User(id),
+    FOREIGN KEY (professionalId) REFERENCES User(id)
+);
+
+insertFeedback:
+INSERT INTO CustomerFeedback (serviceOrderId, customerId, professionalId, rating, comments, createdAt)
+VALUES (?, ?, ?, ?, ?, ?);
+
+getFeedbackByServiceOrder:
+SELECT * FROM CustomerFeedback WHERE serviceOrderId = ?;
+
+getLastInsertId:
+SELECT last_insert_rowid();

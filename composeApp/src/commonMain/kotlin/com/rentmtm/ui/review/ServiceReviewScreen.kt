@@ -1,0 +1,226 @@
+package com.rentmtm.ui.review
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.rentmtm.ui.components.MtmStarRatingBar
+import com.rentmtm.ui.components.MtmTextArea
+import com.rentmtm.viewmodel.ServiceReviewUiState
+import com.rentmtm.viewmodel.ServiceReviewViewModel
+
+// ==========================================
+// 1. STATEFUL COMPONENT (Connects to ViewModel)
+// ==========================================
+@Composable
+fun ServiceReviewScreen(
+    viewModel: ServiceReviewViewModel,
+    onBack: () -> Unit,
+    onFinish: () -> Unit
+) {
+    val state by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(state.isSuccess) {
+        if (state.isSuccess) {
+            onFinish()
+        }
+    }
+
+    // Delegates the actual UI rendering to the Stateless component
+    ServiceReviewContent(
+        state = state,
+        onRatingChanged = viewModel::onRatingChanged,
+        onCommentsChanged = viewModel::onCommentsChanged,
+        onSubmit = viewModel::submitReview,
+        onBack = onBack
+    )
+}
+
+// ==========================================
+// 2. STATELESS COMPONENT (Pure UI, easily testable and previewable)
+// ==========================================
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ServiceReviewContent(
+    state: ServiceReviewUiState,
+    onRatingChanged: (Int) -> Unit,
+    onCommentsChanged: (String) -> Unit,
+    onSubmit: () -> Unit,
+    onBack: () -> Unit
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Rate Service", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+            )
+        },
+        bottomBar = {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shadowElevation = 8.dp,
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                Box(modifier = Modifier.padding(24.dp)) {
+                    Button(
+                        onClick = onSubmit,
+                        enabled = state.isSubmitEnabled && !state.isLoading,
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        if (state.isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        } else {
+                            Text("Submit Review", fontSize = 16.sp)
+                        }
+                    }
+                }
+            }
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "How was your experience?",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Please rate the service provided by ${state.professionalName}.",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            MtmStarRatingBar(
+                rating = state.rating,
+                onRatingChanged = onRatingChanged
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            val ratingText = when (state.rating) {
+                1 -> "Terrible"
+                2 -> "Poor"
+                3 -> "Average"
+                4 -> "Good"
+                5 -> "Excellent!"
+                else -> ""
+            }
+            Text(
+                text = ratingText,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            MtmTextArea(
+                label = "Share your feedback (Optional)",
+                value = state.comments,
+                onValueChange = onCommentsChanged,
+                placeholder = "What went well? What could be improved?",
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+// ==========================================
+// 3. PREVIEWS
+// ==========================================
+
+@Preview
+@Composable
+fun ServiceReviewContentPreview_Empty() {
+    MaterialTheme {
+        ServiceReviewContent(
+            state = ServiceReviewUiState(
+                professionalName = "Jane Doe",
+                rating = 0,
+                comments = "",
+                isSubmitEnabled = false,
+                isLoading = false
+            ),
+            onRatingChanged = {},
+            onCommentsChanged = {},
+            onSubmit = {},
+            onBack = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+fun ServiceReviewContentPreview_Filled() {
+    MaterialTheme {
+        ServiceReviewContent(
+            state = ServiceReviewUiState(
+                professionalName = "John Smith",
+                rating = 4,
+                comments = "The service was completed very quickly and the professional was extremely polite. Highly recommended!",
+                isSubmitEnabled = true,
+                isLoading = false
+            ),
+            onRatingChanged = {},
+            onCommentsChanged = {},
+            onSubmit = {},
+            onBack = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+fun ServiceReviewContentPreview_Loading() {
+    MaterialTheme {
+        ServiceReviewContent(
+            state = ServiceReviewUiState(
+                professionalName = "Alex Taylor",
+                rating = 5,
+                comments = "Perfect!",
+                isSubmitEnabled = true,
+                isLoading = true // Simula o estado de submissão
+            ),
+            onRatingChanged = {},
+            onCommentsChanged = {},
+            onSubmit = {},
+            onBack = {}
+        )
+    }
+}

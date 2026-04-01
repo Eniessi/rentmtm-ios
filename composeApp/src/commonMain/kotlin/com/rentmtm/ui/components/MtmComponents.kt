@@ -8,6 +8,8 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -294,5 +296,36 @@ fun MtmTextArea(
                 }
             }
         )
+    }
+}
+
+@Composable
+fun MtmStarRatingBar(
+    rating: Int,
+    onRatingChanged: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    maxStars: Int = 5,
+    starSize: androidx.compose.ui.unit.Dp = 40.dp,
+    activeColor: Color = Color(0xFFFFC107), // Amarelo/Dourado padrão
+    inactiveColor: Color = Color.LightGray
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        for (i in 1..maxStars) {
+            val isSelected = i <= rating
+            val icon = if (isSelected) Icons.Filled.Star else Icons.Outlined.StarBorder
+            val tint = if (isSelected) activeColor else inactiveColor
+
+            Icon(
+                imageVector = icon,
+                contentDescription = "Star $i",
+                tint = tint,
+                modifier = Modifier
+                    .size(starSize)
+                    .clickable { onRatingChanged(i) }
+            )
+        }
     }
 }

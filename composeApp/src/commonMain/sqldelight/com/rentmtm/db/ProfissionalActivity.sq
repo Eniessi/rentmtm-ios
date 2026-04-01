@@ -1,0 +1,24 @@
+CREATE TABLE ProfessionalActivity (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    professionalId INTEGER NOT NULL,
+    professionalType TEXT AS com.rentmtm.model.enums.ProfessionalType NOT NULL,
+    shortDescription TEXT NOT NULL,
+    detailedDescription TEXT NOT NULL,
+    createdAt TEXT NOT NULL,
+    FOREIGN KEY (professionalId) REFERENCES User(id) ON DELETE CASCADE
+);
+
+-- Index for faster queries when loading a professional's portfolio
+CREATE INDEX idx_professional_activity ON ProfessionalActivity(professionalId);
+
+insertActivity:
+INSERT INTO ProfessionalActivity (
+    professionalId,
+    professionalType,
+    shortDescription,
+    detailedDescription,
+    createdAt
+) VALUES (?, ?, ?, ?, ?);
+
+getActivitiesByProfessional:
+SELECT * FROM ProfessionalActivity WHERE professionalId = ? ORDER BY id DESC;

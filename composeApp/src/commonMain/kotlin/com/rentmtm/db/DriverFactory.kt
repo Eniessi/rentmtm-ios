@@ -45,6 +45,9 @@ fun createDatabase(driverFactory: DriverFactory): AppDatabase {
         ),
         ServiceFeedbackAdapter = ServiceFeedback.Adapter(
             reviewerTypeAdapter = EnumColumnAdapter()
+        ),
+        ProfessionalActivityAdapter = ProfessionalActivity.Adapter(
+            professionalTypeAdapter = EnumColumnAdapter()
         )
     )
 }

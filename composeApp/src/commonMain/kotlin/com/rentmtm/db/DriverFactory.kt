@@ -41,7 +41,10 @@ fun createDatabase(driverFactory: DriverFactory): AppDatabase {
             workAuthorizationAdapter = EnumColumnAdapter(),
             salaryPeriodAdapter = EnumColumnAdapter(),
             educationLevelAdapter = EnumColumnAdapter(),
-            workScheduleAdapter = EnumColumnAdapter()
+            workScheduleAdapter = EnumColumnAdapter(),
+        ),
+        ServiceFeedbackAdapter = ServiceFeedback.Adapter(
+            reviewerTypeAdapter = EnumColumnAdapter()
         )
     )
 }

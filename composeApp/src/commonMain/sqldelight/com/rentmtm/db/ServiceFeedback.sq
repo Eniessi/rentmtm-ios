@@ -1,0 +1,30 @@
+CREATE TABLE ServiceFeedback (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    serviceOrderId INTEGER NOT NULL,
+    reviewerId INTEGER NOT NULL,
+    targetUserId INTEGER NOT NULL,
+    reviewerType TEXT AS com.rentmtm.model.enums.ReviewerType NOT NULL,
+    rating INTEGER NOT NULL,
+    comments TEXT,
+    createdAt TEXT NOT NULL,
+    FOREIGN KEY (serviceOrderId) REFERENCES ServiceOrder(id) ON DELETE CASCADE,
+    FOREIGN KEY (reviewerId) REFERENCES User(id),
+    FOREIGN KEY (targetUserId) REFERENCES User(id)
+);
+
+-- Separate index to prevent the same user type from reviewing twice on the same order safely
+CREATE UNIQUE INDEX idx_unique_service_reviewer ON ServiceFeedback(serviceOrderId, reviewerType);
+
+insertFeedback:
+INSERT INTO ServiceFeedback (
+    serviceOrderId,
+    reviewerId,
+    targetUserId,
+    reviewerType,
+    rating,
+    comments,
+    createdAt
+) VALUES (?, ?, ?, ?, ?, ?, ?);
+
+getFeedbackByServiceOrder:
+SELECT * FROM ServiceFeedback WHERE serviceOrderId = ?;

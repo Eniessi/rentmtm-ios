@@ -1,14 +1,16 @@
 package com.rentmtm.model
 
+import com.rentmtm.model.enums.ReviewerType
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CustomerFeedback(
+data class ServiceFeedback(
     val id: Long = 0L,
     val serviceOrderId: Long,
-    val customerId: Long,
-    val professionalId: Long,
-    val rating: Int, // Constraint: 1 to 5
+    val reviewerId: Long,
+    val targetUserId: Long,
+    val reviewerType: ReviewerType,
+    val rating: Int,
     val comments: String? = null,
     val createdAt: String
 )

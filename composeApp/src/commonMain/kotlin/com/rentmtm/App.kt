@@ -68,7 +68,10 @@ enum class Routes {
     FindProfessionals,
     ChatP2P,
     ServiceOrder,
-    SupportChat
+    SupportChat,
+    CustomerReview,
+    ProfessionalReview,
+    ReviewSuccess
 }
 
 @Composable
@@ -177,7 +180,71 @@ fun App() {
                     ServiceOrderScreen(
                         viewModel = serviceOrderViewModel,
                         onBack = { navController.popBackStack() },
-                        onOpenChat = { navController.navigate(Routes.ChatP2P.name)}
+                        onOpenChat = { navController.navigate(Routes.ChatP2P.name)},
+                        onNavigateToReview = { isCustomer, orderId ->
+                            if (isCustomer) {
+                                navController.navigate("${Routes.CustomerReview.name}/$orderId")
+                            } else {
+                                navController.navigate("${Routes.ProfessionalReview.name}/$orderId")
+                            }
+                        }
+                    )
+                }
+
+                // --- TELA DE AVALIAÇÃO DO CLIENTE ---
+                composable(
+                    route = "${Routes.CustomerReview.name}/{orderId}",
+                    arguments = listOf(navArgument("orderId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val orderId = backStackEntry.arguments?.getLong("orderId") ?: 0L
+
+                    // Nota: O ViewModel deveria ser injetado/lembrado corretamente aqui
+                    val reviewViewModel = remember { com.rentmtm.viewmodel.ServiceReviewViewModel() }
+
+                    LaunchedEffect(Unit) { reviewViewModel.loadServiceDetails(orderId) }
+
+                    com.rentmtm.ui.review.ServiceReviewScreen(
+                        viewModel = reviewViewModel,
+                        onBack = { navController.popBackStack() },
+                        onFinish = {
+                            navController.navigate(Routes.ReviewSuccess.name) {
+                                popUpTo(Routes.CustomerReview.name) { inclusive = true }
+                            }
+                        }
+                    )
+                }
+
+                // --- TELA DE AVALIAÇÃO DO PROFISSIONAL ---
+                composable(
+                    route = "${Routes.ProfessionalReview.name}/{orderId}",
+                    arguments = listOf(navArgument("orderId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val orderId = backStackEntry.arguments?.getLong("orderId") ?: 0L
+
+                    val profViewModel = remember { com.rentmtm.viewmodel.ProfessionalReviewViewModel() }
+
+                    LaunchedEffect(Unit) { profViewModel.loadOrderData(orderId) }
+
+                    com.rentmtm.ui.review.ProfessionalReviewScreen(
+                        viewModel = profViewModel,
+                        onBack = { navController.popBackStack() },
+                        onFinish = {
+                            navController.navigate(Routes.ReviewSuccess.name) {
+                                popUpTo(Routes.ProfessionalReview.name) { inclusive = true }
+                            }
+                        }
+                    )
+                }
+
+                // --- TELA DE SUCESSO FINAL ---
+                composable(route = Routes.ReviewSuccess.name) {
+                    com.rentmtm.ui.review.ReviewSuccessScreen(
+                        onFinish = {
+                            // Volta para a Home limpando a pilha de navegação
+                            navController.navigate(Routes.Home.name) {
+                                popUpTo(0)
+                            }
+                        }
                     )
                 }
 
@@ -313,31 +380,6 @@ fun App() {
                         onNavigateToBudget = { selectedProfession ->
                             // Você pode registrar no BudgetViewModel o selectedProfession aqui antes de navegar
                             navController.navigate(Routes.Budget.name)
-                        }
-                    )
-                }
-
-                // --- STEP 4: SERVICE ORDER (TELA FINAL) ---
-                composable(
-                    route = "${Routes.ServiceOrder.name}/{budgetId}",
-                    arguments = listOf(navArgument("budgetId") { type = NavType.LongType })
-                ) { backStackEntry ->
-                    val budgetId = backStackEntry.arguments?.getLong("budgetId") ?: 0L
-
-                    LaunchedEffect(budgetId) {
-                        serviceOrderViewModel.loadOrderFromBudget(budgetId)
-                    }
-
-                    ServiceOrderScreen(
-                        viewModel = serviceOrderViewModel,
-                        onBack = {
-                            navController.navigate(Routes.Home.name) {
-                                popUpTo(0)
-                            }
-                        },
-                        onOpenChat = { // ⬅️ Gatilho para abrir a tela de chat
-                            // Passamos o budgetId ou serviceOrderId para o chat carregar o contexto correto
-                            navController.navigate("${Routes.ChatP2P.name}/$budgetId")
                         }
                     )
                 }

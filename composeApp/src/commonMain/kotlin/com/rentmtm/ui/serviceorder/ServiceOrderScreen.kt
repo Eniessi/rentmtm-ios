@@ -28,7 +28,8 @@ import com.rentmtm.viewmodel.ViewerRole
 fun ServiceOrderScreen(
     viewModel: ServiceOrderViewModel,
     onBack: () -> Unit,
-    onOpenChat: () -> Unit
+    onOpenChat: () -> Unit,
+    onNavigateToReview: (isCustomer: Boolean, orderId: Long) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -61,7 +62,15 @@ fun ServiceOrderScreen(
             ) {
                 Box(modifier = Modifier.padding(24.dp)) {
                     Button(
-                        onClick = { viewModel.saveServiceOrder() },
+                        // --- ALTERAÇÃO AQUI NO ONCLICK ---
+                        onClick = {
+                            viewModel.saveServiceOrder()
+                            // Verifica se quem está a ver é o cliente ou o profissional
+                            val isCustomer = state.role == ViewerRole.CLIENT
+                            // Aciona a navegação passando o ID da ordem
+                            onNavigateToReview(isCustomer, state.orderId)
+                        },
+                        // ---------------------------------
                         modifier = Modifier.fillMaxWidth().height(50.dp),
                         shape = RoundedCornerShape(8.dp)
                     ) {

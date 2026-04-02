@@ -7,6 +7,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Message
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,7 +30,8 @@ fun ServiceOrderScreen(
     viewModel: ServiceOrderViewModel,
     onBack: () -> Unit,
     onOpenChat: () -> Unit,
-    onNavigateToReview: (isCustomer: Boolean, orderId: Long) -> Unit
+    onNavigateToReview: (isCustomer: Boolean, orderId: Long) -> Unit,
+    onViewTimeline: (orderId: Long) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -46,7 +48,9 @@ fun ServiceOrderScreen(
                     }
                 },
                 actions = {
-                    // ⬅️ BOTÃO DE CHAT NO CABEÇALHO
+                    IconButton(onClick = { onViewTimeline(state.orderId) }) {
+                        Icon(imageVector = Icons.Default.History, contentDescription = "View Timeline")
+                    }
                     IconButton(onClick = onOpenChat) {
                         Icon(Icons.AutoMirrored.Filled.Message, contentDescription = "Open Chat")
                     }

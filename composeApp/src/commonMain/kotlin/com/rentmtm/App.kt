@@ -33,6 +33,7 @@ import com.rentmtm.ui.profile.ProfileFlow
 import com.rentmtm.ui.request.RequestServiceFlow
 import com.rentmtm.ui.search.FindProfessionalsScreen
 import com.rentmtm.ui.serviceorder.ServiceOrderScreen
+import com.rentmtm.ui.serviceorder.ServiceTimelineScreen
 import com.rentmtm.viewmodel.*
 import com.rentmtm.ui.signup.SignUpScreen
 import com.rentmtm.ui.webview.WebBrowserScreen
@@ -71,7 +72,8 @@ enum class Routes {
     SupportChat,
     CustomerReview,
     ProfessionalReview,
-    ReviewSuccess
+    ReviewSuccess,
+    ServiceTimeline
 }
 
 @Composable
@@ -180,14 +182,35 @@ fun App() {
                     ServiceOrderScreen(
                         viewModel = serviceOrderViewModel,
                         onBack = { navController.popBackStack() },
-                        onOpenChat = { navController.navigate(Routes.ChatP2P.name)},
+                        onOpenChat = { navController.navigate("${Routes.ChatP2P.name}/$budgetId") },
                         onNavigateToReview = { isCustomer, orderId ->
                             if (isCustomer) {
                                 navController.navigate("${Routes.CustomerReview.name}/$orderId")
                             } else {
                                 navController.navigate("${Routes.ProfessionalReview.name}/$orderId")
                             }
+                        },
+                        onViewTimeline = { orderId ->
+                        navController.navigate("${Routes.ServiceTimeline.name}/$orderId")
                         }
+                    )
+                }
+
+                // ⬅️ ROTA DA TELA DE TIMELINE
+                composable(
+                    route = "${Routes.ServiceTimeline.name}/{orderId}",
+                    arguments = listOf(navArgument("orderId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val orderId = backStackEntry.arguments?.getLong("orderId") ?: 0L
+                    val timelineViewModel = remember { ServiceTimelineViewModel() }
+
+                    LaunchedEffect(orderId) {
+                        timelineViewModel.loadServiceTimeline(orderId)
+                    }
+
+                    ServiceTimelineScreen(
+                        viewModel = timelineViewModel,
+                        onBack = { navController.popBackStack() }
                     )
                 }
 

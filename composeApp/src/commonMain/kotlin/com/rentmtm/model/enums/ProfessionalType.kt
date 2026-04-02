@@ -4,5 +4,6 @@ enum class ProfessionalType {
     INDIVIDUAL,
     COMPANY,
     PLUMBER,
+    ELECTRICIAN,
     OTHER
 }

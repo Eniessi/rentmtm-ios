@@ -20,5 +20,17 @@ INSERT INTO ProfessionalActivity (
     createdAt
 ) VALUES (?, ?, ?, ?, ?);
 
+-- Busca todas as atividades de um profissional
+getAllActivities:
+SELECT * FROM ProfessionalActivity
+WHERE professionalId = ?
+ORDER BY createdAt DESC;
+
+-- Busca atividades filtradas por tipo
+getActivitiesByType:
+SELECT * FROM ProfessionalActivity
+WHERE professionalId = ? AND professionalType = ?
+ORDER BY createdAt DESC;
+
 getActivitiesByProfessional:
 SELECT * FROM ProfessionalActivity WHERE professionalId = ? ORDER BY id DESC;

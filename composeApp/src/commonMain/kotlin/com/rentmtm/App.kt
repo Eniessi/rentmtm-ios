@@ -97,6 +97,7 @@ fun App() {
                 val serviceOrderViewModel = remember { ServiceOrderViewModel() }
                 val chatViewModel = remember { ChatViewModel() }
                 val supportChatViewModel = remember { SupportChatViewModel() }
+                val loginViewModel = remember { com.rentmtm.viewmodel.LoginViewModel() }
 
                 NavHost(
                     navController = navController,
@@ -105,6 +106,7 @@ fun App() {
                 // --- LOGIN ---
                 composable(route = Routes.Login.name) {
                     LoginScreen(
+                        viewModel = loginViewModel,
                         onNavigateToSignUp = { navController.navigate(Routes.SignUp.name) },
                         onNavigateToForgotPassword = { navController.navigate(Routes.ForgotPassword.name) },
                         onLoginSuccess = { navController.navigate(Routes.Home.name) }

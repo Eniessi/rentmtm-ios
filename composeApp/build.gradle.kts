@@ -45,6 +45,7 @@ kotlin {
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
+            implementation("io.ktor:ktor-client-logging:3.0.0")
             implementation(libs.kotlinx.coroutines.core)
             implementation(compose.materialIconsExtended)
             implementation(libs.navigation.compose)

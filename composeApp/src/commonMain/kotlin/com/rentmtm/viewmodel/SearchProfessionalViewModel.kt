@@ -1,14 +1,21 @@
 package com.rentmtm.viewmodel
 
+import IBudgetRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rentmtm.model.enums.BudgetStatus
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class SearchProfessionalsViewModel : ViewModel() {
+class SearchProfessionalsViewModel(
+    private val repository: IBudgetRepository // Adicione o repositório no construtor
+) : ViewModel() {
+
+    private val _recommendedProfessional = MutableStateFlow<ProfessionalUiModel?>(null)
+    val recommendedProfessional = _recommendedProfessional.asStateFlow()
 
     private val _uiState = MutableStateFlow<ProfessionalSearchUiState>(ProfessionalSearchUiState.Idle)
     val uiState: StateFlow<ProfessionalSearchUiState> = _uiState.asStateFlow()
@@ -33,6 +40,31 @@ class SearchProfessionalsViewModel : ViewModel() {
                 _uiState.value = ProfessionalSearchUiState.Success(mockedResults)
             } else {
                 _uiState.value = ProfessionalSearchUiState.Empty
+            }
+        }
+    }
+
+    fun checkForBudgetResponse(budgetId: Long) {
+        viewModelScope.launch {
+            // Vai no banco Fake consultar o orçamento
+            val budget = repository.getBudgetById(budgetId)
+
+            println("Tech Lead Log -> Buscando resposta para Budget ID: $budgetId")
+            println("Tech Lead Log -> Status atual do Budget no banco: ${budget?.status}")
+
+            // Se o profissional enviou o preço, o status será QUOTED
+            if (budget?.status == com.rentmtm.model.enums.BudgetStatus.QUOTED) {
+                _recommendedProfessional.value = ProfessionalUiModel(
+                    id = budget.professionalId,
+                    name = "Recommended: Prof. Allocated",
+                    professionTitle = "Service Quote: $${budget.estimatedValue}", // O preço aparece aqui!
+                    rating = 5.0,
+                    distanceKm = 1.2,
+                    totalJobs = 42
+                )
+                println("Tech Lead Log -> Profissional recomendado CRIADO NA UI com sucesso!")
+            } else {
+                println("Tech Lead Log -> O status não é QUOTED. Nenhuma recomendação criada.")
             }
         }
     }

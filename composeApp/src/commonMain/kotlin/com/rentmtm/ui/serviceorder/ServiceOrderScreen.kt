@@ -30,8 +30,7 @@ fun ServiceOrderScreen(
     viewModel: ServiceOrderViewModel,
     onBack: () -> Unit,
     onOpenChat: () -> Unit,
-    onNavigateToReview: (isCustomer: Boolean, orderId: Long) -> Unit,
-    onViewTimeline: (orderId: Long) -> Unit
+    onNavigateToReview: (isCustomer: Boolean, orderId: Long) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -48,9 +47,6 @@ fun ServiceOrderScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { onViewTimeline(state.orderId) }) {
-                        Icon(imageVector = Icons.Default.History, contentDescription = "View Timeline")
-                    }
                     IconButton(onClick = onOpenChat) {
                         Icon(Icons.AutoMirrored.Filled.Message, contentDescription = "Open Chat")
                     }
@@ -78,7 +74,7 @@ fun ServiceOrderScreen(
                         modifier = Modifier.fillMaxWidth().height(50.dp),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text(if (state.role == ViewerRole.PROFESSIONAL) "Update Order" else "Confirm Execution", fontSize = 16.sp)
+                        Text(if (state.role == ViewerRole.PROFESSIONAL) "Update Order" else "Ok", fontSize = 16.sp)
                     }
                 }
             }
@@ -93,6 +89,25 @@ fun ServiceOrderScreen(
             horizontalAlignment = Alignment.Start
         ) {
             Spacer(modifier = Modifier.height(16.dp))
+
+            if (state.role == ViewerRole.CLIENT) {
+                Text(
+                    text = "Order Generated Successfully!",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Your service request has been converted into an official Service Order. Please review the details below and click 'Ok' to authorize the professional to start the execution.",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    lineHeight = 20.sp
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
+                Spacer(modifier = Modifier.height(24.dp))
+            }
 
             Text(
                 text = "Service Details",

@@ -1,16 +1,34 @@
 package com.rentmtm
 
+import InMemoryBudgetRepository
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -27,6 +45,7 @@ import com.rentmtm.ui.chat.ChatScreen
 import com.rentmtm.ui.chat.SupportChatScreen
 import com.rentmtm.ui.forgotpassword.ForgotPasswordScreen
 import com.rentmtm.ui.home.HomeScreen
+import com.rentmtm.ui.inbox.ProfessionalInboxScreen
 import com.rentmtm.ui.login.LoginScreen
 import com.rentmtm.ui.newpassword.NewPasswordScreen
 import com.rentmtm.ui.profile.ProfileFlow
@@ -37,8 +56,11 @@ import com.rentmtm.ui.serviceorder.ServiceTimelineScreen
 import com.rentmtm.viewmodel.*
 import com.rentmtm.ui.signup.SignUpScreen
 import com.rentmtm.ui.webview.WebBrowserScreen
+import io.ktor.client.request.request
 import io.ktor.http.decodeURLPart
 import io.ktor.http.encodeURLParameter
+import rentmtm.composeapp.generated.resources.Res
+import rentmtm.composeapp.generated.resources.ic_logo_mtm_color
 
 // Definição das Cores
 val AzulP = Color(0xFF004AAD)
@@ -73,7 +95,9 @@ enum class Routes {
     CustomerReview,
     ProfessionalReview,
     ReviewSuccess,
-    ServiceTimeline
+    ServiceTimeline,
+    ProfessionalInbox,
+    StartingExecution
 }
 
 @Composable
@@ -90,14 +114,16 @@ fun App() {
                     .fillMaxSize()
                     .safeDrawingPadding()
             ) {
+                val budgetRepository = remember { InMemoryBudgetRepository() }
                 val navController = rememberNavController()
                 val registerViewModel = remember { RegisterViewModel() }
-                val budgetViewModel = remember { BudgetViewModel() }
-                val searchViewModel = remember { SearchProfessionalsViewModel() }
+                val budgetViewModel = remember { BudgetViewModel(budgetRepository) }
+                val searchViewModel = remember { SearchProfessionalsViewModel(budgetRepository) }
                 val serviceOrderViewModel = remember { ServiceOrderViewModel() }
                 val chatViewModel = remember { ChatViewModel() }
                 val supportChatViewModel = remember { SupportChatViewModel() }
-                val loginViewModel = remember { com.rentmtm.viewmodel.LoginViewModel() }
+                val loginViewModel = remember { LoginViewModel() }
+                val inboxViewModel = remember { ProfessionalInboxViewModel(budgetRepository) }
 
                 NavHost(
                     navController = navController,
@@ -107,7 +133,7 @@ fun App() {
                 composable(route = Routes.Login.name) {
                     LoginScreen(
                         viewModel = loginViewModel,
-                        onNavigateToSignUp = { navController.navigate(Routes.SignUp.name) },
+                        onNavigateToSignUp = { navController.navigate( Routes.SignUp.name) },
                         onNavigateToForgotPassword = { navController.navigate(Routes.ForgotPassword.name) },
                         onLoginSuccess = { navController.navigate(Routes.Home.name) }
                     )
@@ -187,15 +213,91 @@ fun App() {
                         onOpenChat = { navController.navigate("${Routes.ChatP2P.name}/$budgetId") },
                         onNavigateToReview = { isCustomer, orderId ->
                             if (isCustomer) {
-                                navController.navigate("${Routes.CustomerReview.name}/$orderId")
+                                navController.navigate("${Routes.StartingExecution.name}/$orderId")
                             } else {
-                                navController.navigate("${Routes.ProfessionalReview.name}/$orderId")
+                                navController.navigate("${Routes.ServiceTimeline.name}/$orderId")
                             }
-                        },
-                        onViewTimeline = { orderId ->
-                        navController.navigate("${Routes.ServiceTimeline.name}/$orderId")
                         }
                     )
+                }
+
+                // --- TELA DE TRANSIÇÃO (SPLASH / INICIALIZAÇÃO DA OS) ---
+                composable(
+                    route = "${Routes.StartingExecution.name}/{orderId}",
+                    arguments = listOf(navArgument("orderId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val orderId = backStackEntry.arguments?.getLong("orderId") ?: 0L
+
+                    // 1. Controle de Estado
+                    var startAnimation by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+
+                    // 2. A Coreografia no Compose (Idêntica ao XML nativo)
+                    val scale by animateFloatAsState(
+                        targetValue = if (startAnimation) 1f else 0.6f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioLowBouncy, // Controla o "quique" (elasticidade)
+                            stiffness = Spring.StiffnessLow // Control a "rigidez" (mais baixo = mais lento e fluido)
+                        ),
+                        label = "LogoScale"
+                    )
+
+                    val alpha by androidx.compose.animation.core.animateFloatAsState(
+                        targetValue = if (startAnimation) 1f else 0f,
+                        animationSpec = androidx.compose.animation.core.tween(
+                            durationMillis = 750,
+                            easing = androidx.compose.animation.core.FastOutSlowInEasing
+                        ),
+                        label = "LogoAlpha"
+                    )
+
+                    // 3. O Gatilho e o Salto para a Timeline
+                    LaunchedEffect(Unit) {
+                        startAnimation = true
+                        kotlinx.coroutines.delay(3000) // Tempo que o cliente fica vendo a animação
+                        navController.navigate("${Routes.ServiceTimeline.name}/$orderId") {
+                            popUpTo(Routes.StartingExecution.name) { inclusive = true }
+                        }
+                    }
+
+                    // 4. A UI com Fundo Azul
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.primary), // Seu fundo AzulP
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                            // Usamos a versão ESTÁTICA copiada para o composeResources
+                            Image(
+                                painter = org.jetbrains.compose.resources.painterResource(
+                                    Res.drawable.ic_logo_mtm_color
+                                ),
+                                contentDescription = "RentMTM Logo",
+                                modifier = Modifier
+                                    .size(288.dp) // Mantemos o tamanho do quadro original
+                                    .graphicsLayer(
+                                        scaleX = scale,
+                                        scaleY = scale,
+                                        alpha = alpha
+                                    )
+                            )
+
+                            Spacer(modifier = Modifier.height(32.dp))
+
+                            Text(
+                                text = "Initializing Service Order...",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White // Texto branco para contrastar com o fundo azul
+                            )
+                            Text(
+                                text = "Connecting with professional",
+                                fontSize = 14.sp,
+                                color = Color.White.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
                 }
 
                 // ⬅️ ROTA DA TELA DE TIMELINE
@@ -212,7 +314,15 @@ fun App() {
 
                     ServiceTimelineScreen(
                         viewModel = timelineViewModel,
-                        onBack = { navController.popBackStack() }
+                        onBack = { navController.popBackStack() },
+                        onNavigateHome = { navController.navigate(Routes.Home.name) },
+                        onOpenChat = { id ->
+                            navController.navigate("${Routes.ChatP2P.name}/$id")
+                        },
+                        onNavigateToReview = { id ->
+                            // Como estamos testando o fluxo do Cliente, chamamos o CustomerReview
+                            navController.navigate("${Routes.CustomerReview.name}/$id")
+                        }
                     )
                 }
 
@@ -273,13 +383,45 @@ fun App() {
                     )
                 }
 
-                // --- BUDGET SCREEN (PASSO 1: TEXTOS) ---
-                composable(route = Routes.Budget.name) {
+                // --- BUDGET SCREEN ---
+                composable(
+                    route = "${Routes.Budget.name}?budgetId={budgetId}",
+                    arguments = listOf(
+                        navArgument("budgetId") {
+                            type = NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        }
+                    )
+                ) { backStackEntry ->
+                    val budgetId = backStackEntry.arguments?.getString("budgetId")?.toLongOrNull()
+
+                    LaunchedEffect(budgetId) {
+                        budgetViewModel.initializeBudget(budgetId)
+                    }
+
                     BudgetScreen(
                         viewModel = budgetViewModel,
                         onBack = { navController.popBackStack() },
                         onNextToPhotos = {
+                            if (budgetId == null) {
+                                budgetViewModel.submitBudgetRequest()
+                            }
                             navController.navigate(Routes.BudgetPhotos.name)
+                        },
+                        // EVENTO: O Profissional enviou o preço
+                        onQuoteSent = { sentBudgetId ->
+                            // Navega para a OS para ele ficar aguardando o cliente aceitar
+                            navController.navigate("${Routes.FindProfessionals.name}/$sentBudgetId") {
+                                popUpTo(Routes.Home.name)
+                            }
+                        },
+                        // EVENTO: O Cliente aceitou o preço
+                        onAcceptQuote = { newOrderId ->
+                            // Navega para a OS para acompanhar a execução
+                            navController.navigate("${Routes.ServiceOrder.name}/$newOrderId") {
+                                popUpTo(Routes.Home.name)
+                            }
                         }
                     )
                 }
@@ -287,16 +429,12 @@ fun App() {
                 // --- BUDGET PHOTOS SCREEN (PASSO 2: FOTOS) ---
                 composable(route = Routes.BudgetPhotos.name) {
                     BudgetPhotosScreen(
-                        viewModel = budgetViewModel, //
+                        viewModel = budgetViewModel,
                         onBack = { navController.popBackStack() },
                         onNext = {
-                            budgetViewModel.submitBudgetRequest()
-
-                            // Tech Lead Note: Em produção, pegue o ID real retornado pela persistência.
-                            val generatedBudgetId = 999L
-
-                            // Navega para a busca de profissionais levando o ID do orçamento
-                            navController.navigate("${Routes.FindProfessionals.name}/$generatedBudgetId")
+                            // Observe o ID gerado e navegue
+                            val id = budgetViewModel.createdBudgetId.value ?: 101L
+                            navController.navigate("${Routes.FindProfessionals.name}/$id")
                         }
                     )
                 }
@@ -307,6 +445,10 @@ fun App() {
                     arguments = listOf(navArgument("budgetId") { type = NavType.LongType })
                 ) { backStackEntry ->
                     val budgetId = backStackEntry.arguments?.getLong("budgetId") ?: 0L
+
+                    LaunchedEffect(budgetId) {
+                        searchViewModel.checkForBudgetResponse(budgetId)
+                    }
 
                     FindProfessionalsScreen(
                         viewModel = searchViewModel, //
@@ -378,6 +520,24 @@ fun App() {
                         },
                         onNavigateToSupportChat = {
                             navController.navigate(Routes.SupportChat.name)
+                        },
+                        onNavigateToProfAllocatedArea = {
+                            navController.navigate(Routes.ProfessionalInbox.name)
+                        }
+                    )
+                }
+
+                composable(route = Routes.ProfessionalInbox.name) {
+                    // 1. A MÁGICA ACONTECE AQUI
+                    // Toda vez que o usuário navegar para esta rota, este bloco é executado
+                    LaunchedEffect(Unit) {
+                        inboxViewModel.loadIncomingRequests()
+                    }
+
+                    ProfessionalInboxScreen(
+                        viewModel = inboxViewModel,
+                        onBudgetSelected = { budgetId ->
+                            navController.navigate("${Routes.Budget.name}?budgetId=$budgetId")
                         }
                     )
                 }

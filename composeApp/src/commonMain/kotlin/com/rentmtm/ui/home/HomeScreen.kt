@@ -44,7 +44,8 @@ fun HomeScreen(
     onNavigateToWeb: (String, String) -> Unit,
     onNavigateToRequestServices: () -> Unit,
     onNavigateToMyAccount: () -> Unit,
-    onNavigateToSupportChat: () -> Unit
+    onNavigateToSupportChat: () -> Unit,
+    onNavigateToProfAllocatedArea: () -> Unit
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -99,6 +100,7 @@ fun HomeScreen(
                             when (option) {
                                 "Request Services" -> onNavigateToRequestServices()
                                 "Talk to us", "Lilo Virtual Assistent" -> onNavigateToSupportChat()
+                                "Prof. Allocated Area" -> onNavigateToProfAllocatedArea()
                                 else -> showFab = true
                             }
                         },
@@ -307,7 +309,8 @@ fun HomeScreenPreview() {
             onNavigateToWeb = { _, _ -> }, // Preview falso
             onNavigateToRequestServices = {},
             onNavigateToMyAccount = {},
-            onNavigateToSupportChat = {}
+            onNavigateToSupportChat = {},
+            onNavigateToProfAllocatedArea = {}
         )
     }
 }

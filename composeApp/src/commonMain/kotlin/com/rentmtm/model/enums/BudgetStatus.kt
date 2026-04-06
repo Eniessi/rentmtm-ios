@@ -9,5 +9,6 @@ enum class BudgetStatus {
     REJECTED,   // Profissional recusou
     NEGOTIATING,// Contraproposta em andamento
     COMPLETED,  // Serviço prestado e pago
-    CANCELLED   // Cancelado por uma das partes
+    CANCELLED,
+    QUOTED// Cancelado por uma das partes
 }

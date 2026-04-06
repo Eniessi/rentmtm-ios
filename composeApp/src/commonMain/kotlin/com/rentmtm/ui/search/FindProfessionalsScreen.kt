@@ -31,9 +31,10 @@ import com.rentmtm.viewmodel.SearchProfessionalsViewModel
 fun FindProfessionalsScreen(
     viewModel: SearchProfessionalsViewModel,
     onBack: () -> Unit,
-    onProfessionalSelected: (Long) -> Unit // Este é o nosso "Accept" que gera a Ordem de Serviço
+    onProfessionalSelected: (Long) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
+    val recommendedProf by viewModel.recommendedProfessional.collectAsState()
 
     LaunchedEffect(state) {
         if (state is ProfessionalSearchUiState.Idle) {
@@ -49,34 +50,31 @@ fun FindProfessionalsScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            Crossfade(targetState = state, label = "SearchStateTransition") { currentState ->
-                when (currentState) {
-                    is ProfessionalSearchUiState.Idle,
-                    is ProfessionalSearchUiState.Searching -> {
-                        SearchingView()
-                    }
-                    is ProfessionalSearchUiState.Success -> {
-                        // CORREÇÃO: Repassando os 3 eventos necessários
+            Crossfade(
+                // A mágica: Se tiver recomendado, o estado visual é Success.
+                // Se não, forçamos o estado Searching para manter o radar na tela.
+                targetState = if (recommendedProf != null) ProfessionalSearchUiState.Success(emptyList()) else state,
+                label = "SearchStateTransition"
+            ) { currentState ->
+                when {
+                    recommendedProf != null -> {
                         ResultsView(
-                            professionals = currentState.professionals,
-                            onAccept = { professionalId ->
-                                onProfessionalSelected(professionalId)
-                            },
-                            onDecline = { professionalId ->
-                                // TODO: Chamar o ViewModel para remover este prof da lista
-                                println("Tech Lead Log -> Cliente recusou o profissional $professionalId")
-                            },
-                            onAsk = { professionalId ->
-                                // TODO: Navegar para tela de Chat
-                                println("Tech Lead Log -> Cliente quer tirar dúvidas com o profissional $professionalId")
-                            }
+                            professionals = emptyList(),
+                            recommendedProf = recommendedProf,
+                            onAccept = { onProfessionalSelected(it) },
+                            onDecline = { /* Lógica de declinar */ },
+                            onAsk = { /* Lógica de chat */ }
                         )
                     }
-                    is ProfessionalSearchUiState.Empty -> {
+                    currentState is ProfessionalSearchUiState.Idle || currentState is ProfessionalSearchUiState.Searching -> {
+                        SearchingView()
+                    }
+                    currentState is ProfessionalSearchUiState.Empty -> {
                         EmptyResultView(onRetry = viewModel::resetSearch)
                     }
-                    is ProfessionalSearchUiState.Error -> {
-                        // Handle Error View
+                    else -> {
+                        // Caso de erro ou estados não previstos, mantém o radar
+                        SearchingView()
                     }
                 }
             }
@@ -179,14 +177,18 @@ private fun RadarAnimation(modifier: Modifier = Modifier) {
 // -------------------------------------------------------------
 @Composable
 private fun ResultsView(
-    professionals: List<ProfessionalUiModel>,
+    professionals: List<ProfessionalUiModel>, // Mantemos o parâmetro para não quebrar a assinatura, mas vamos ignorar
+    recommendedProf: ProfessionalUiModel?,
     onAccept: (Long) -> Unit,
     onDecline: (Long) -> Unit,
     onAsk: (Long) -> Unit
 ) {
+    // Se não houver profissional alocado ainda, não mostramos a lista de resultados
+    if (recommendedProf == null) return
+
     Column(modifier = Modifier.fillMaxSize()) {
         Text(
-            text = "We found ${professionals.size} professionals near you!",
+            text = "Professional Found!",
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(24.dp)
@@ -197,12 +199,12 @@ private fun ResultsView(
             contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(professionals) { profile ->
-                ProfessionalCard(
-                    profile = profile,
-                    onAccept = { onAccept(profile.id) },
-                    onDecline = { onDecline(profile.id) },
-                    onAsk = { onAsk(profile.id) }
+            item {
+                RecommendedProfessionalCard(
+                    profile = recommendedProf,
+                    onAccept = { onAccept(recommendedProf.id) },
+                    onDecline = { onDecline(recommendedProf.id) },
+                    onAsk = { onAsk(recommendedProf.id) }
                 )
             }
         }
@@ -285,6 +287,111 @@ private fun EmptyResultView(onRetry: () -> Unit) {
     }
 }
 
+@Composable
+fun RecommendedProfessionalCard(
+    profile: ProfessionalUiModel,
+    onAccept: () -> Unit,
+    onDecline: () -> Unit,
+    onAsk: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp), // Margem externa para não colar nas bordas
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp), // Elevação maior para destacar
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        // Aumentamos o padding interno de 16.dp para 24.dp para o card "crescer"
+        Column(modifier = Modifier.padding(24.dp)) {
+
+            // HEADER DE RECOMENDAÇÃO (Texto um pouco maior)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = "Recommended",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Recommended for you",
+                    style = MaterialTheme.typography.titleMedium, // Fonte maior
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // CORPO DO CARD (Aumento do Avatar e das Fontes)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Avatar aumentado de 50.dp para 70.dp
+                Box(
+                    modifier = Modifier
+                        .size(70.dp)
+                        .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = profile.name.replace("Recommended: ", "").take(1),
+                        style = MaterialTheme.typography.headlineMedium // Letra do avatar maior
+                    )
+                }
+
+                Spacer(Modifier.width(16.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = profile.name.replace("Recommended: ", ""),
+                        style = MaterialTheme.typography.titleLarge, // Nome maior
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = profile.professionTitle,
+                        style = MaterialTheme.typography.bodyLarge, // Título/Preço maior
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // BOTÕES DE AÇÃO (Mais altos e com texto mais legível)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Button(
+                    onClick = onAsk,
+                    modifier = Modifier.weight(1f).height(48.dp), // Botão mais alto
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Text("Ask Question", fontWeight = FontWeight.Bold)
+                }
+
+                Button(
+                    onClick = onAccept,
+                    modifier = Modifier.weight(1f).height(48.dp), // Botão mais alto
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Text("Accept Quote", fontWeight = FontWeight.Bold)
+                }
+            }
+
+            TextButton(
+                onClick = onDecline,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text("Decline Request", fontWeight = FontWeight.SemiBold)
+            }
+        }
+    }
+}
+
 // ==========================================
 // PREVIEWS
 // ==========================================
@@ -314,7 +421,8 @@ fun PreviewResultsView() {
                 professionals = mockList,
                 onAccept = {},
                 onDecline = {},
-                onAsk = {}
+                onAsk = {},
+                recommendedProf = null
             )
         }
     }

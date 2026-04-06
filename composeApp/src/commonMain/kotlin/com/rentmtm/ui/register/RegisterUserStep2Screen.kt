@@ -146,7 +146,7 @@ fun RegisterUserStep2Screen(
             Button(
                 onClick = onBack,
                 shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                 modifier = Modifier.width(130.dp).height(48.dp)
             ) {
                 Icon(Icons.Default.ArrowBack, contentDescription = null, modifier = Modifier.size(18.dp))

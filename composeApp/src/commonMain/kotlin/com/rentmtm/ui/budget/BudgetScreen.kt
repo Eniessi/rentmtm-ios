@@ -2,14 +2,17 @@ package com.rentmtm.ui.budget
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.rentmtm.model.enums.BudgetStatus
 import com.rentmtm.ui.components.MtmTextArea
 import com.rentmtm.ui.components.MtmTextField
@@ -18,10 +21,37 @@ import com.rentmtm.viewmodel.ViewerRole
 import com.rentmtm.viewmodel.BudgetUiState
 
 @Composable
+fun MtmStatusBadge(status: BudgetStatus) {
+    val (backgroundColor, textColor, label) = when (status) {
+        BudgetStatus.PENDING -> Triple(Color(0xFFFFF3CD), Color(0xFF856404), "OPEN REQUEST")
+        BudgetStatus.QUOTED -> Triple(Color(0xFFCCE5FF), Color(0xFF004085), "AWAITING APPROVAL")
+        BudgetStatus.ACCEPTED -> Triple(Color(0xFFD4EDDA), Color(0xFF155724), "IN PROGRESS")
+        BudgetStatus.COMPLETED -> Triple(Color(0xFFE2E3E5), Color(0xFF383D41), "CLOSED")
+        else -> Triple(Color.LightGray, Color.DarkGray, "UNKNOWN")
+    }
+
+    Surface(
+        color = backgroundColor,
+        shape = RoundedCornerShape(4.dp),
+        modifier = Modifier.padding(bottom = 16.dp)
+    ) {
+        Text(
+            text = label,
+            color = textColor,
+            fontWeight = FontWeight.Bold,
+            fontSize = 12.sp,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        )
+    }
+}
+
+@Composable
 fun BudgetScreen(
     viewModel: BudgetViewModel,
     onBack: () -> Unit,
-    onNextToPhotos: () -> Unit
+    onNextToPhotos: () -> Unit,
+    onQuoteSent: (Long) -> Unit, // NOVO
+    onAcceptQuote: (Long) -> Unit // NOVO
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -35,10 +65,19 @@ fun BudgetScreen(
         onAdditionalNotesChange = viewModel::onAdditionalNotesChanged,
         onQuoteValueChange = viewModel::onQuoteValueChanged,
         onSubmitRequest = onNextToPhotos,
-        onSendQuote = viewModel::sendQuote
+        // Ao clicar, o ViewModel processa e devolve o sucesso para a navegação
+        onSendQuote = {
+            state.budget?.id?.let { id ->
+                viewModel.sendQuote(budgetId = id, onSuccess = { onQuoteSent(id) })
+            }
+        },
+        onAcceptQuote = {
+            state.budget?.id?.let { id ->
+                viewModel.acceptBudgetQuote(budgetId = id, onSuccess = { orderId -> onAcceptQuote(orderId) })
+            }
+        }
     )
 }
-
 @Composable
 fun BudgetContent(
     state: BudgetUiState,
@@ -50,7 +89,8 @@ fun BudgetContent(
     onAdditionalNotesChange: (String) -> Unit = {},
     onQuoteValueChange: (String) -> Unit = {},
     onSubmitRequest: () -> Unit = {},
-    onSendQuote: () -> Unit = {}
+    onSendQuote: () -> Unit = {},
+    onAcceptQuote: () -> Unit = {}
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize().systemBarsPadding(),
@@ -69,6 +109,12 @@ fun BudgetContent(
             )
         }
     ) { innerPadding ->
+        if (state.isLoading) {
+            Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+            return@Scaffold // Evita renderizar o resto da tela enquanto carrega
+        }
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -78,14 +124,17 @@ fun BudgetContent(
         ) {
             when (state.role) {
                 ViewerRole.CLIENT -> {
-                    ClientDraftingView(
-                        state = state,
-                        onServiceTitleChange = onServiceTitleChange,
-                        onServiceDescriptionChange = onServiceDescriptionChange,
-                        onServiceLocationChange = onServiceLocationChange,
-                        onScheduledDateChange = onScheduledDateChange,
-                        onPaymentMethodChange = onPaymentMethodChange
-                    )
+                    // AQUI É A GRANDE MUDANÇA ARQUITETURAL
+                    if (state.status == BudgetStatus.QUOTED) {
+                        ClientReviewQuoteView(state = state, onAcceptQuote = onAcceptQuote)
+                    } else {
+                        ClientDraftingView( state = state,
+                            onServiceTitleChange = onServiceTitleChange,
+                            onServiceDescriptionChange = onServiceDescriptionChange,
+                            onServiceLocationChange = onServiceLocationChange,
+                            onScheduledDateChange = onScheduledDateChange,
+                            onPaymentMethodChange = onPaymentMethodChange )
+                    }
                 }
                 ViewerRole.PROFESSIONAL -> {
                     ProfessionalRespondingView(
@@ -221,6 +270,49 @@ private fun BudgetBottomActions(
                     Text("Send Quote")
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ClientReviewQuoteView(
+    state: BudgetUiState,
+    onAcceptQuote: () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        MtmStatusBadge(status = state.status)
+
+        Text("Professional's Quote", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+
+        Card(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "Estimated Cost: $${state.budget?.estimatedValue ?: "0.00"}",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text("Notes from Professional:", fontWeight = FontWeight.SemiBold)
+                Text(state.budget?.additionalNotes ?: "No additional notes provided.")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "By confirming, you agree to hire this professional for the stated amount and initiate the Service Order.",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.Gray
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = onAcceptQuote,
+            modifier = Modifier.fillMaxWidth().height(50.dp)
+        ) {
+            Text("Accept Quote & Hire Professional")
         }
     }
 }

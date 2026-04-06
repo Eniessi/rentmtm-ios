@@ -1,14 +1,16 @@
 package com.rentmtm.viewmodel
 
+import IBudgetRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class ProfessionalInboxViewModel : ViewModel() {
+class ProfessionalInboxViewModel(
+    private val repository: IBudgetRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ProfessionalInboxUiState>(ProfessionalInboxUiState.Loading)
     val uiState: StateFlow<ProfessionalInboxUiState> = _uiState.asStateFlow()
@@ -21,29 +23,27 @@ class ProfessionalInboxViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = ProfessionalInboxUiState.Loading
 
-            // Simulando busca no banco de dados por orçamentos com status PENDING
-            // que foram atribuídos a este profissional.
-            delay(1500)
+            // Busca os orçamentos no banco de dados "Fake"
+            val budgets = repository.getPendingRequestsForProfessional()
 
-            val mockRequests = listOf(
-                IncomingBudgetUiModel(
-                    budgetId = 101,
-                    clientName = "Alice Freeman",
-                    serviceTitle = "Kitchen Pipe Leak",
-                    locationSummary = "Downtown",
-                    timestamp = "10 min ago"
-                ),
-                IncomingBudgetUiModel(
-                    budgetId = 102,
-                    clientName = "John Doe",
-                    serviceTitle = "Living Room Chandelier Installation",
-                    locationSummary = "Saint Peter",
-                    timestamp = "1h ago"
-                )
-            )
+            if (budgets.isNotEmpty()) {
+                // Mapeamento de Model de Domínio (Budget) para Model de UI (IncomingBudgetUiModel)
+                val uiModels = budgets.map { budget ->
 
-            if (mockRequests.isNotEmpty()) {
-                _uiState.value = ProfessionalInboxUiState.Success(mockRequests)
+                    // 1. Resolvemos o problema do Address.
+                    // Tentamos pegar o Address e transformá-lo em String. Se for nulo, usamos o texto padrão.
+                    val locationText = budget.serviceLocation?.toString() ?: "Location not provided"
+
+                    IncomingBudgetUiModel(
+                        budgetId = budget.id, // ID real do banco
+                        clientName = "Client #${budget.customerId}", // Usando o ID do cliente real
+                        serviceTitle = budget.serviceTitle ?: "No Title",
+                        locationSummary = locationText, // Passando a String limpa que criamos acima
+                        timestamp = budget.requestDate ?: "Just now" // Usando a data do Budget
+                    )
+                }
+
+                _uiState.value = ProfessionalInboxUiState.Success(uiModels)
             } else {
                 _uiState.value = ProfessionalInboxUiState.Empty
             }

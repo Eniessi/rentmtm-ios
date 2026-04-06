@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -25,13 +26,19 @@ import com.rentmtm.viewmodel.TimelineStep
 @Composable
 fun ServiceTimelineScreen(
     viewModel: ServiceTimelineViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateHome: () -> Unit,
+    onOpenChat: (Long) -> Unit, // NOVO: Callback do Chat
+    onNavigateToReview: (Long) -> Unit // NOVO: Callback da Avaliação
 ) {
     val state by viewModel.uiState.collectAsState()
 
     ServiceTimelineContent(
         state = state,
-        onBack = onBack
+        onBack = onBack,
+        onNavigateHome = onNavigateHome,
+        onOpenChat = { onOpenChat(state.orderId) },
+        onNavigateToReview = { onNavigateToReview(state.orderId) }
     )
 }
 
@@ -39,7 +46,10 @@ fun ServiceTimelineScreen(
 @Composable
 fun ServiceTimelineContent(
     state: ServiceTimelineUiState,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateHome: () -> Unit,
+    onOpenChat: () -> Unit = {}, // NOVO
+    onNavigateToReview: () -> Unit = {} // NOVO
 ) {
     Scaffold(
         topBar = {
@@ -49,8 +59,37 @@ fun ServiceTimelineContent(
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
+                },
+                actions = {
+                    IconButton(onClick = onOpenChat) {
+                        Icon(Icons.AutoMirrored.Filled.Message, contentDescription = "Open Chat")
+                    }
                 }
             )
+        },
+        bottomBar = {
+            Surface(color = MaterialTheme.colorScheme.background, shadowElevation = 8.dp) {
+                Column(
+                    modifier = Modifier.padding(24.dp).fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp) // Espaço entre os botões
+                ) {
+                    // BOTÃO PRIMÁRIO: Avaliar
+                    Button(
+                        onClick = onNavigateToReview,
+                        modifier = Modifier.fillMaxWidth().height(50.dp)
+                    ) {
+                        Text("Evaluate Service", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    // BOTÃO SECUNDÁRIO: Home (Outlined para não brigar visualmente com o Avaliar)
+                    OutlinedButton(
+                        onClick = onNavigateHome,
+                        modifier = Modifier.fillMaxWidth().height(50.dp)
+                    ) {
+                        Text("Back to Home", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
         }
     ) { padding ->
         Column(
@@ -129,7 +168,8 @@ fun ServiceTimelineContentPreview() {
                     TimelineStep("Service Completed", "The service was successfully finished and validated.", null, isCompleted = false, isCurrent = false)
                 )
             ),
-            onBack = {}
+            onBack = {},
+            onNavigateHome = {}
         )
     }
 }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.*
@@ -30,7 +31,8 @@ import com.rentmtm.ui.components.MtmHeadsUpNotification
 @Composable
 fun ProfessionalInboxScreen(
     viewModel: ProfessionalInboxViewModel,
-    onBudgetSelected: (Long) -> Unit
+    onBudgetSelected: (Long) -> Unit,
+    onBack: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -47,7 +49,8 @@ fun ProfessionalInboxScreen(
 @Composable
 fun ProfessionalInboxContent(
     state: ProfessionalInboxUiState,
-    onBudgetSelected: (Long) -> Unit
+    onBudgetSelected: (Long) -> Unit,
+    onBack: () -> Unit = {}
 ) {
     // Estado local exclusivo para a apresentação da notificação mockada
     var showMockNotification by remember { mutableStateOf(false) }
@@ -60,6 +63,11 @@ fun ProfessionalInboxContent(
                     // O Botão Mágico: Clicar aqui exibe ou esconde a notificação
                     IconButton(onClick = { showMockNotification = !showMockNotification }) {
                         Icon(Icons.Default.Notifications, contentDescription = "Trigger Mock Notification")
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )

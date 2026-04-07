@@ -12,7 +12,7 @@ workflows:
         script: |
           cd iosApp
           xcodebuild clean archive \
-            -workspace iosApp.xcworkspace \
+            -project iosApp.xcodeproj \
             -scheme iosApp \
             -configuration Release \
             -archivePath build/iosApp.xcarchive \

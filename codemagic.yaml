@@ -10,10 +10,9 @@ workflows:
     scripts:
       - name: Compilar o iOS App (Ignorando Assinatura da Apple)
         script: |
-          chmod +x gradlew 
+          chmod +x gradlew
           ./gradlew clean
           cd iosApp
-          
           xcodebuild clean archive \
             -project iosApp.xcodeproj \
             -scheme iosApp \
@@ -21,7 +20,8 @@ workflows:
             -archivePath build/iosApp.xcarchive \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            OTHER_LDFLAGS="-lsqlite3"
 
       - name: Engenharia Reversa do AltStore (Payload -> IPA)
         script: |

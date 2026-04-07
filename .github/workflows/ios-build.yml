@@ -1,0 +1,51 @@
+name: Build iOS IPA for AltStore
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    # A MÁQUINA PARRUDA DA MICROSOFT
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle # O GitHub Action salva o cache de graça!
+
+      - name: Conceder Permissões
+        run: chmod +x gradlew
+
+      - name: Compilar Kotlin Native e Xcode
+        run: |
+          cd iosApp
+          xcodebuild clean archive \
+            -project iosApp.xcodeproj \
+            -scheme iosApp \
+            -configuration Release \
+            -archivePath build/iosApp.xcarchive \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Montar o .ipa (Payload)
+        run: |
+          cd iosApp
+          mkdir -p Payload
+          cp -R build/iosApp.xcarchive/Products/Applications/iosApp.app Payload/
+          zip -qr RentMTM.ipa Payload
+
+      - name: Disponibilizar Arquivo
+        uses: actions/upload-artifact@v4
+        with:
+          name: RentMTM-iOS-AltStore
+          path: iosApp/RentMTM.ipa
+          retention-days: 5

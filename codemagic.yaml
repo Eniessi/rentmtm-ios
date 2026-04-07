@@ -21,7 +21,6 @@ workflows:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_ALLOWED=NO \
-            OTHER_LDFLAGS="-lsqlite3"
 
       - name: Engenharia Reversa do AltStore (Payload -> IPA)
         script: |

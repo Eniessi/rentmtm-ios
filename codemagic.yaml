@@ -1,19 +1,16 @@
 workflows:
   ios-altstore-build:
     name: Build iOS IPA (Unsigned for AltStore)
-    # Requisitamos o Mac Mini M2 gratuito deles
     instance_type: mac_mini_m2
-    # Define um limite de tempo para não torrar seus minutos se o script travar
     max_build_duration: 60
-    
+
     environment:
-      java_version: 17 # Essencial para o KMP e o Gradle rodarem
+      java: 17
 
     scripts:
       - name: Compilar o iOS App (Ignorando Assinatura da Apple)
         script: |
           cd iosApp
-          # O comando bruto do Xcode para gerar o .app sem criptografia
           xcodebuild clean archive \
             -workspace iosApp.xcworkspace \
             -scheme iosApp \
@@ -30,6 +27,5 @@ workflows:
           cp -R build/iosApp.xcarchive/Products/Applications/iosApp.app Payload/
           zip -qr RentMTM.ipa Payload
 
-    # Aqui dizemos ao Codemagic onde o arquivo final estará para download
     artifacts:
       - iosApp/RentMTM.ipa

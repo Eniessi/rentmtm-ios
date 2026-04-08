@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		1EBF7AD39576811C567A25C8 /* TempStartProject.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TempStartProject.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1EBF7AD39576811C567A25C8 /* RentMTM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RentMTM.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -59,7 +59,7 @@
 		526144D8566BBEA8C41FBCA4 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1EBF7AD39576811C567A25C8 /* TempStartProject.app */,
+				1EBF7AD39576811C567A25C8 /* RentMTM.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -87,7 +87,7 @@
 			packageProductDependencies = (
 			);
 			productName = iosApp;
-			productReference = 1EBF7AD39576811C567A25C8 /* TempStartProject.app */;
+			productReference = 1EBF7AD39576811C567A25C8 /* RentMTM.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */

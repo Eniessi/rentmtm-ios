@@ -183,7 +183,7 @@ fun App() {
                     route = "${Routes.ChatP2P.name}/{serviceId}",
                     arguments = listOf(navArgument("serviceId") { type = NavType.LongType })
                 ) { backStackEntry ->
-                    val serviceId = backStackEntry.arguments?.getLong("serviceId") ?: 0L
+                    val serviceId = backStackEntry.arguments?.let { NavType.LongType.get(it, "serviceId") } ?: 0L
 
                     // Tech Lead Note: Num cenário real, o chatViewModel chamaria algo como:
                     // LaunchedEffect(serviceId) { chatViewModel.loadChatHistory(serviceId) }
@@ -200,7 +200,7 @@ fun App() {
                     route = "${Routes.ServiceOrder.name}/{budgetId}",
                     arguments = listOf(navArgument("budgetId") { type = NavType.LongType })
                 ) { backStackEntry ->
-                    val budgetId = backStackEntry.arguments?.getLong("budgetId") ?: 0L
+                    val budgetId = backStackEntry.arguments?.let { NavType.LongType.get(it, "budgetId") } ?: 0L
 
                     // Carrega os dados do orçamento para a OS antes de exibir a tela
                     LaunchedEffect(budgetId) {
@@ -226,7 +226,7 @@ fun App() {
                     route = "${Routes.StartingExecution.name}/{orderId}",
                     arguments = listOf(navArgument("orderId") { type = NavType.LongType })
                 ) { backStackEntry ->
-                    val orderId = backStackEntry.arguments?.getLong("orderId") ?: 0L
+                    val orderId = backStackEntry.arguments?.let { NavType.LongType.get(it, "orderId") } ?: 0L
 
                     // 1. Controle de Estado
                     var startAnimation by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
@@ -305,7 +305,7 @@ fun App() {
                     route = "${Routes.ServiceTimeline.name}/{orderId}",
                     arguments = listOf(navArgument("orderId") { type = NavType.LongType })
                 ) { backStackEntry ->
-                    val orderId = backStackEntry.arguments?.getLong("orderId") ?: 0L
+                    val orderId = backStackEntry.arguments?.let { NavType.LongType.get(it, "orderId") } ?: 0L
                     val timelineViewModel = remember { ServiceTimelineViewModel() }
 
                     LaunchedEffect(orderId) {
@@ -331,7 +331,7 @@ fun App() {
                     route = "${Routes.CustomerReview.name}/{orderId}",
                     arguments = listOf(navArgument("orderId") { type = NavType.LongType })
                 ) { backStackEntry ->
-                    val orderId = backStackEntry.arguments?.getLong("orderId") ?: 0L
+                    val orderId = backStackEntry.arguments?.let { NavType.LongType.get(it, "orderId") } ?: 0L
 
                     // Nota: O ViewModel deveria ser injetado/lembrado corretamente aqui
                     val reviewViewModel = remember { com.rentmtm.viewmodel.ServiceReviewViewModel() }
@@ -354,7 +354,7 @@ fun App() {
                     route = "${Routes.ProfessionalReview.name}/{orderId}",
                     arguments = listOf(navArgument("orderId") { type = NavType.LongType })
                 ) { backStackEntry ->
-                    val orderId = backStackEntry.arguments?.getLong("orderId") ?: 0L
+                    val orderId = backStackEntry.arguments?.let { NavType.LongType.get(it, "orderId") } ?: 0L
 
                     val profViewModel = remember { com.rentmtm.viewmodel.ProfessionalReviewViewModel() }
 
@@ -394,7 +394,7 @@ fun App() {
                         }
                     )
                 ) { backStackEntry ->
-                    val budgetId = backStackEntry.arguments?.getString("budgetId")?.toLongOrNull()
+                    val budgetId = backStackEntry.arguments?.let { NavType.StringType.get(it, "budgetId") }?.toLongOrNull()
 
                     LaunchedEffect(budgetId) {
                         budgetViewModel.initializeBudget(budgetId)
@@ -444,7 +444,7 @@ fun App() {
                     route = "${Routes.FindProfessionals.name}/{budgetId}",
                     arguments = listOf(navArgument("budgetId") { type = NavType.LongType })
                 ) { backStackEntry ->
-                    val budgetId = backStackEntry.arguments?.getLong("budgetId") ?: 0L
+                    val budgetId = backStackEntry.arguments?.let { NavType.LongType.get(it, "budgetId") } ?: 0L
 
                     LaunchedEffect(budgetId) {
                         searchViewModel.checkForBudgetResponse(budgetId)
@@ -491,7 +491,7 @@ fun App() {
                     route = "${Routes.NewPassword.name}/{email}",
                     arguments = listOf(navArgument("email") { type = NavType.StringType })
                 ) { backStackEntry ->
-                    val emailPassado = backStackEntry.arguments?.getString("email") ?: ""
+                    val emailPassado = backStackEntry.arguments?.let { NavType.StringType.get(it, "email") } ?: ""
                     NewPasswordScreen(
                         emailReceived = emailPassado,
                         onPasswordChanged = {
@@ -576,8 +576,8 @@ fun App() {
                         navArgument("title") { type = NavType.StringType }
                     )
                 ) { backStackEntry ->
-                    val urlPassed = backStackEntry.arguments?.getString("url") ?: ""
-                    val titlePassed = backStackEntry.arguments?.getString("title") ?: "Web Page"
+                    val urlPassed = backStackEntry.arguments?.let { NavType.StringType.get(it, "url") } ?: ""
+                    val titlePassed = backStackEntry.arguments?.let { NavType.StringType.get(it, "title") } ?: ""
 
                     val decodedUrl = urlPassed.decodeURLPart()
 

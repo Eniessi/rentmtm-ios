@@ -1,6 +1,7 @@
 package com.rentmtm.network
 
 import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
@@ -11,31 +12,41 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-object MtmHttpClient {
-    // URL base do teu servidor (muda para o teu IP local ou domínio de produção)
-    private const val BASE_URL = "http://10.0.2.2:8080/api"
+// 1. Diga ao Kotlin: "Vou fornecer um HttpClient específico para cada plataforma"
+expect fun createHttpClient(): HttpClient
 
-    val client = HttpClient {
-        install(ContentNegotiation) {
-            json(Json {
-                prettyPrint = true
-                isLenient = true
-                ignoreUnknownKeys = true // Evita crashes se o backend mandar campos a mais
-            })
-        }
+// 2. A configuração comum (Negociação e Logs) que ambas as plataformas partilham
+fun HttpClientConfig<*>.installMtmConfig() {
+    install(ContentNegotiation) {
+        json(Json {
+            prettyPrint = true
+            isLenient = true
+            ignoreUnknownKeys = true
+        })
+    }
 
-        install(Logging) {
-            logger = object : Logger {
-                override fun log(message: String) {
-                    println("Ktor => $message") // Ajuda-te a ver o que está a acontecer no Logcat
-                }
+    install(Logging) {
+        logger = object : Logger {
+            override fun log(message: String) {
+                println("Ktor => $message")
             }
-            level = LogLevel.ALL
         }
+        level = LogLevel.ALL
+    }
 
-        defaultRequest {
-            url(BASE_URL)
-            contentType(ContentType.Application.Json)
-        }
+    defaultRequest {
+        // No iOS, 10.0.2.2 não existe (é o emulador do Android).
+        // Se fores testar no telemóvel físico, precisas de colocar o IP local do teu PC (ex: 192.168.1.100).
+        // Por agora, vou manter o teu, mas lembra-te disto!
+        url("http://10.0.2.2:8080/api")
+        contentType(ContentType.Application.Json)
+    }
+}
+
+// 3. O Singleton que expõe o cliente de forma segura (Lazy)
+object MtmHttpClient {
+    // Usar 'lazy' garante que o iOS só tenta alocar memória quando tu efetivamente fizeres um pedido!
+    val client: HttpClient by lazy {
+        createHttpClient()
     }
 }

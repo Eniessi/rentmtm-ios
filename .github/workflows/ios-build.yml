@@ -24,6 +24,14 @@ jobs:
       - name: Conceder Permissões
         run: chmod +x gradlew
 
+      - name: Configurar Otimização Extrema de Memória
+        run: |
+          echo "" >> gradle.properties
+          echo "org.gradle.jvmargs=-Xmx8g -XX:+UseG1GC -XX:MaxMetaspaceSize=1g" >> gradle.properties
+          echo "kotlin.daemon.jvm.options=-Xmx8g" >> gradle.properties
+          echo "kotlin.native.cacheKind=none" >> gradle.properties
+          echo "kotlin.native.link.disable.devirtualization=true" >> gradle.properties
+
       - name: Selecionar Xcode 16
         run: sudo xcode-select -s /Applications/Xcode_16.1.app
 
@@ -37,13 +45,15 @@ jobs:
             -archivePath build/iosApp.xcarchive \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            OTHER_LDFLAGS="-lsqlite3"
 
       - name: Montar o .ipa (Payload)
         run: |
           cd iosApp
           mkdir -p Payload
-          cp -R build/iosApp.xcarchive/Products/Applications/iosApp.app Payload/
+          # O curinga *.app copia o aplicativo independentemente do nome que o KMP gerou
+          cp -R build/iosApp.xcarchive/Products/Applications/*.app Payload/
           zip -qr RentMTM.ipa Payload
 
       - name: Disponibilizar Arquivo

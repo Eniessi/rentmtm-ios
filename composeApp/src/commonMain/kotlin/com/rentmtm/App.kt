@@ -110,9 +110,7 @@ fun App() {
         ) {
             // 2. O Box protege apenas o CONTEÚDO, deixando o fundo livre por trás das barras.
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .safeDrawingPadding()
+                modifier = Modifier.fillMaxSize()
             ) {
                 val budgetRepository = remember { InMemoryBudgetRepository() }
                 val navController = rememberNavController()
